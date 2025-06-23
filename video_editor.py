@@ -290,6 +290,9 @@ def add_audio(
         # Combine all audio tracks
         print("Combining audio tracks...")
         final_audio = CompositeAudioClip([background_music, *tts_clips, *sfx_clips])
+        # Ensure final audio matches video duration
+        if final_audio.duration != video.duration:
+            final_audio = final_audio.subclipped(0, video.duration)
 
         # Combine video with final audio
         print("Combining video with audio...")

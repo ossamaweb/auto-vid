@@ -14,6 +14,8 @@ DEFAULTS = {
     "audio_ducking_level": 0.5,
     "background_volume": 0.3,
     "ducking_fade_duration": 0.5,
+    "background_cross_fade_duration": 2.0,
+    "background_loop": True,
     "temp_dir": "./tmp",  # Use local tmp directory in repo
 }
 
@@ -104,41 +106,108 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Video processing failed: {str(e)}")
             raise
+        finally:
+            # Always cleanup temp directory
+            self._cleanup_job_dir(job_temp_dir)
 
-    def _download_audio_assets(self, audio_assets):
+    def _download_audio_assets(self, audio_assets, job_temp_dir):
         """Download all audio assets and return lookup dict"""
         assets = {}
         for asset in audio_assets:
             local_path = self.asset_manager.download_asset(
-                asset["source"], self.temp_dir
+                asset["source"], job_temp_dir
             )
             assets[asset["id"]] = local_path
         return assets
 
     def _create_background_music(self, event, audio_assets, video_duration):
-        """Create background music from playlist"""
+        """Create background music from playlist with crossfading"""
         details = event["details"]
         playlist = details["playlist"]
         volume = details.get("volume", DEFAULTS["background_volume"])
+        background_loop = details.get("loop", DEFAULTS["background_loop"])
+        crossfade_duration = details.get(
+            "crossfadeDuration", DEFAULTS["background_cross_fade_duration"]
+        )
 
-        # For now, use first track in playlist
-        if playlist:
-            asset_id = playlist[0]
+        print({volume, background_loop, crossfade_duration})
+
+        if not playlist:
+            return None
+
+        # Get audio files from playlist
+        audio_files = []
+        for asset_id in playlist:
             if asset_id in audio_assets:
-                audio_clip = AudioFileClip(audio_assets[asset_id])
+                audio_files.append(audio_assets[asset_id])
 
-                # Loop if needed
-                if details.get("loop", False) and audio_clip.duration < video_duration:
-                    loops_needed = int(video_duration / audio_clip.duration) + 1
-                    audio_clip = audio_clip.loop(loops_needed)
+        if not audio_files:
+            return None
 
-                # Trim to video duration
-                if audio_clip.duration > video_duration:
-                    audio_clip = audio_clip.subclipped(0, video_duration)
+        background_tracks = []
+        current_duration = 0
+        track_index = 0
 
-                return audio_clip.with_volume_scaled(volume)
+        while current_duration < video_duration:
+            # Get next track from playlist (cycle through if loop enabled)
+            if track_index >= len(audio_files):
+                if background_loop:
+                    track_index = 0
+                else:
+                    break
 
-        return None
+            audio_path = audio_files[track_index]
+            audio_clip = AudioFileClip(audio_path)
+            audio_clip = audio_clip.with_volume_scaled(volume)
+
+            # Calculate clip duration needed
+            remaining_duration = video_duration - current_duration
+            if audio_clip.duration is None:
+                continue
+
+            clip_duration = min(
+                audio_clip.duration, remaining_duration + crossfade_duration
+            )
+
+            # Trim clip if needed
+            if clip_duration < audio_clip.duration:
+                audio_clip = audio_clip.subclipped(0, clip_duration)
+
+            # Add crossfade effects
+            if len(background_tracks) > 0:  # Not first track
+                audio_clip = audio_clip.with_effects(
+                    [afx.AudioFadeIn(crossfade_duration)]
+                )
+                audio_clip = audio_clip.with_start(
+                    current_duration - crossfade_duration
+                )
+            else:
+                audio_clip = audio_clip.with_start(current_duration)
+
+            if current_duration + clip_duration < video_duration:  # Not last track
+                audio_clip = audio_clip.with_effects(
+                    [afx.AudioFadeOut(crossfade_duration)]
+                )
+
+            background_tracks.append(audio_clip)
+            current_duration += clip_duration - (
+                crossfade_duration if len(background_tracks) > 1 else 0
+            )
+            track_index += 1
+
+            # Break if close enough to target duration
+            if video_duration - current_duration < 1:
+                break
+
+        if not background_tracks:
+            return None
+
+        # Create composite and trim to exact duration
+        final_audio = CompositeAudioClip(background_tracks)
+        if final_audio.duration > video_duration:
+            final_audio = final_audio.subclipped(0, video_duration)
+
+        return final_audio
 
     def _create_tts_clip(self, event):
         """Create TTS audio clip"""
