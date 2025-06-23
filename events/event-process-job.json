@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "test-message-id",
+      "receiptHandle": "test-receipt-handle",
+      "body": "{\"jobId\": \"test-job-123\", \"jobSpec\": {\"metadata\": {\"projectId\": \"test_project\", \"title\": \"Test Video\"}, \"assets\": {\"video\": {\"id\": \"main_video\", \"source\": \"https://example.com/video.mp4\"}}, \"timeline\": [], \"output\": {\"destination\": \"s3://output-bucket/\", \"filename\": \"test.mp4\", \"format\": \"mp4\"}}}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1545082649183",
+        "SenderId": "AIDAIENQZJOLO23YVJ4VO",
+        "ApproximateFirstReceiveTimestamp": "1545082649185"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "test-md5-hash",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:test-queue",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

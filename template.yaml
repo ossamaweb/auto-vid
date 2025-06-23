@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Auto-Vid Serverless Video Processing Application
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 3008
+    Runtime: python3.12
+
+Resources:
+  SubmitJobFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/submit_job/
+      Handler: app.lambda_handler
+      Events:
+        SubmitJob:
+          Type: Api
+          Properties:
+            Path: /submit
+            Method: post
+
+  VideoProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # PackageType: Image
+      # ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/auto-vid-processor:latest"
+      CodeUri: src/video_processor/
+      Handler: app.lambda_handler
+      Timeout: 900
+      MemorySize: 3008
+      EphemeralStorage:
+        Size: 10240
+      Policies:
+        - AmazonPollyFullAccess
+        - AmazonS3FullAccess
+      Events:
+        ProcessJob:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt JobQueue.Arn
+
+  GetStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/get_status/
+      Handler: app.lambda_handler
+      Events:
+        GetStatus:
+          Type: Api
+          Properties:
+            Path: /status/{jobId}
+            Method: get
+
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeoutSeconds: 960
+
+Outputs:
+  SubmitJobApi:
+    Description: "API Gateway endpoint URL for Submit Job function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/submit/"

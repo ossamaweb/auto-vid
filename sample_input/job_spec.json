@@ -1,0 +1,58 @@
+{
+  "$schema": "https://your-domain.com/schemas/video-job-v2.json",
+  "metadata": {
+    "projectId": "sample_project",
+    "title": "Sample Video Processing Job",
+    "tags": ["sample", "test"]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "/Users/ossama/Downloads/Video/mp4-1080x1920px-exp_ypfdjek4qbxa-UzWZJ.mp4"
+    },
+    "audio": [
+      {
+        "id": "background_music",
+        "source": "lib/music/A Huevo - Luna Cantina.mp3"
+      },
+      {
+        "id": "sfx_whoosh",
+        "source": "lib/sfx/whoosh-cinematic-161021.mp3"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "type": "backgroundMusic",
+      "details": {
+        "playlist": ["background_music"],
+        "loop": true,
+        "volume": 0.3,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 2.0,
+      "type": "tts",
+      "details": {
+        "text": "Welcome to our sample video",
+        "voiceId": "Joanna",
+        "volume": 1.0
+      }
+    },
+    {
+      "start": 5.0,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_whoosh",
+        "volume": 0.6,
+        "triggersDucking": false
+      }
+    }
+  ],
+  "output": {
+    "destination": "/tmp/test",
+    "filename": "sample-output.mp4",
+    "format": "mp4"
+  }
+}

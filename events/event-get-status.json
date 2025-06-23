@@ -1,0 +1,11 @@
+{
+  "httpMethod": "GET",
+  "path": "/status/test-job-123",
+  "pathParameters": {
+    "jobId": "test-job-123"
+  },
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "queryStringParameters": null
+}
