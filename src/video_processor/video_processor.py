@@ -29,17 +29,23 @@ class VideoProcessor:
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
-    def process_video_job(self, job_spec):
+    def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
+        # Create unique job directory
+        job_temp_dir = os.path.join(self.temp_dir, job_id)
+        os.makedirs(job_temp_dir, exist_ok=True)
+
         try:
             # Phase 1: Download audio assets first (fast fail)
             logger.info("Downloading audio assets...")
-            audio_assets = self._download_audio_assets(job_spec["assets"]["audio"])
+            audio_assets = self._download_audio_assets(
+                job_spec["assets"]["audio"], job_temp_dir
+            )
 
             # Phase 2: Download video asset
             logger.info("Downloading video asset...")
             video_path = self.asset_manager.download_asset(
-                job_spec["assets"]["video"]["source"], self.temp_dir
+                job_spec["assets"]["video"]["source"], job_temp_dir
             )
 
             # Phase 3: Load video and get duration
@@ -76,12 +82,15 @@ class VideoProcessor:
             output_filename = job_spec["output"].get("filename", "output.mp4")
             if not output_filename.lower().endswith(".mp4"):
                 output_filename += ".mp4"
-            local_output = os.path.join(self.temp_dir, output_filename)
+            local_output = os.path.join(job_temp_dir, output_filename)
+            temp_audio_path = os.path.join(job_temp_dir, "temp_audio.m4a")
 
             final_video.write_videofile(
                 local_output,
                 codec="libx264",
                 audio_codec="aac",
+                temp_audiofile=temp_audio_path,
+                remove_temp=True,
                 threads=6,
                 preset="medium",
             )
@@ -209,13 +218,13 @@ class VideoProcessor:
 
         return final_audio
 
-    def _create_tts_clip(self, event):
+    def _create_tts_clip(self, event, job_temp_dir):
         """Create TTS audio clip"""
         details = event["details"]
         start_time = event["start"]
 
         # Generate TTS
-        tts_path = os.path.join(self.temp_dir, f"tts_{start_time}.mp3")
+        tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
         self.tts_generator.generate_speech(
             details["text"], tts_path, details.get("voiceId", "Joanna")
         )
