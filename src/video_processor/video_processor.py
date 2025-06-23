@@ -9,13 +9,14 @@ logger = logging.getLogger(__name__)
 # Default values
 DEFAULTS = {
     "tts_volume": 1.0,
-    "tts_ducking_level": 0.2,
-    "audio_volume": 0.8,
-    "audio_ducking_level": 0.5,
-    "background_volume": 0.3,
-    "ducking_fade_duration": 0.5,
-    "background_cross_fade_duration": 2.0,
-    "background_loop": True,
+    "tts_ducking_fade_duration": 1.0,
+    "tts_voice_id": "Joanna",
+    "tts_engine": "neural",
+    "audio_volume": 0.5,
+    "audio_ducking_fade_duration": 0.2,
+    "background_music_volume": 0.2,
+    "background_music_cross_fade_duration": 2.0,
+    "background_music_loop": True,
     "temp_dir": "./tmp",  # Use local tmp directory in repo
 }
 
@@ -52,10 +53,11 @@ class VideoProcessor:
             video = VideoFileClip(video_path)
             video_duration = video.duration
 
-            # Phase 4: Process timeline
+            # Phase 4: Process timeline and collect ducking ranges
             logger.info("Processing timeline...")
             background_music = None
             audio_clips = []
+            ducking_ranges = []
 
             for event in job_spec["timeline"]:
                 if event["type"] == "backgroundMusic":
@@ -63,19 +65,52 @@ class VideoProcessor:
                         event, audio_assets, video_duration
                     )
                 elif event["type"] == "tts":
-                    clip = self._create_tts_clip(event)
+                    clip = self._create_tts_clip(event, job_temp_dir)
                     audio_clips.append(clip)
+                    # Collect ducking range if duckingLevel is specified
+                    ducking_level = event["details"].get("duckingLevel")
+                    fade_duration = event["details"].get(
+                        "duckingFadeDuration", DEFAULTS["tts_ducking_fade_duration"]
+                    )
+                    if ducking_level is not None:
+                        ducking_ranges.append(
+                            {
+                                "start": event["start"],
+                                "end": event["start"] + clip.duration,
+                                "ducking_level": ducking_level,
+                                "fade_duration": fade_duration,
+                            }
+                        )
                 elif event["type"] == "audio":
                     clip = self._create_audio_clip(event, audio_assets)
                     audio_clips.append(clip)
+                    # Collect ducking range if duckingLevel is specified
+                    ducking_level = event["details"].get("duckingLevel")
+                    fade_duration = event["details"].get(
+                        "duckingFadeDuration", DEFAULTS["audio_ducking_fade_duration"]
+                    )
+                    if ducking_level is not None:
+                        ducking_ranges.append(
+                            {
+                                "start": event["start"],
+                                "end": event["start"] + clip.duration,
+                                "ducking_level": ducking_level,
+                                "fade_duration": fade_duration,
+                            }
+                        )
 
-            # Phase 5: Combine audio layers
+            # Phase 5: Apply ducking to background music
+            if background_music and ducking_ranges:
+                logger.info("Applying ducking to background music...")
+                background_music = self._apply_ducking(background_music, ducking_ranges)
+
+            # Phase 6: Combine audio layers
             logger.info("Combining audio layers...")
             all_audio = [background_music] if background_music else []
             all_audio.extend(audio_clips)
             final_audio = CompositeAudioClip(all_audio)
 
-            # Phase 6: Final assembly and export
+            # Phase 7: Final assembly and export
             logger.info("Creating final video...")
             final_video = video.with_audio(final_audio)
 
@@ -95,7 +130,7 @@ class VideoProcessor:
                 preset="medium",
             )
 
-            # Phase 7: Upload result
+            # Phase 8: Upload result
             logger.info("Uploading result...")
             result_url = self.asset_manager.upload_result(
                 local_output, job_spec["output"]["destination"], output_filename
@@ -133,13 +168,11 @@ class VideoProcessor:
         """Create background music from playlist with crossfading"""
         details = event["details"]
         playlist = details["playlist"]
-        volume = details.get("volume", DEFAULTS["background_volume"])
-        background_loop = details.get("loop", DEFAULTS["background_loop"])
+        volume = details.get("volume", DEFAULTS["background_music_volume"])
+        background_music_loop = details.get("loop", DEFAULTS["background_music_loop"])
         crossfade_duration = details.get(
-            "crossfadeDuration", DEFAULTS["background_cross_fade_duration"]
+            "crossfadeDuration", DEFAULTS["background_music_cross_fade_duration"]
         )
-
-        print({volume, background_loop, crossfade_duration})
 
         if not playlist:
             return None
@@ -160,7 +193,7 @@ class VideoProcessor:
         while current_duration < video_duration:
             # Get next track from playlist (cycle through if loop enabled)
             if track_index >= len(audio_files):
-                if background_loop:
+                if background_music_loop:
                     track_index = 0
                 else:
                     break
@@ -226,7 +259,10 @@ class VideoProcessor:
         # Generate TTS
         tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
         self.tts_generator.generate_speech(
-            details["text"], tts_path, details.get("voiceId", "Joanna")
+            details["text"],
+            tts_path,
+            details.get("voiceId", DEFAULTS["tts_voice_id"]),
+            details.get("engine", DEFAULTS["tts_engine"]),
         )
 
         # Create clip
@@ -257,3 +293,55 @@ class VideoProcessor:
         clip = clip.with_volume_scaled(volume)
 
         return clip
+
+    def _apply_ducking(self, background_music, ducking_ranges):
+        """Apply ducking to background music based on ranges"""
+        # Sort ranges by start time
+        ducking_ranges.sort(key=lambda x: x["start"])
+
+        # Merge overlapping ranges
+        merged_ranges = []
+        if ducking_ranges:
+            current_range = ducking_ranges[0]
+            for next_range in ducking_ranges[1:]:
+                if next_range["start"] <= current_range["end"]:
+                    # Ranges overlap, merge them
+                    current_range["end"] = max(current_range["end"], next_range["end"])
+                    # Use more aggressive ducking level (lower value)
+                    current_range["ducking_level"] = min(
+                        current_range["ducking_level"], next_range["ducking_level"]
+                    )
+                    # Use longer fade duration
+                    current_range["fade_duration"] = max(
+                        current_range["fade_duration"], next_range["fade_duration"]
+                    )
+                else:
+                    # No overlap, add current range and start new one
+                    merged_ranges.append(current_range)
+                    current_range = next_range
+            merged_ranges.append(current_range)
+
+        # Apply ducking for each merged range
+        for range_info in merged_ranges:
+            background_music = background_music.with_effects(
+                [
+                    afx.AudioFadeIn(range_info["fade_duration"]),
+                    afx.AudioFadeOut(range_info["fade_duration"]),
+                ]
+            ).with_volume_scaled(
+                range_info["ducking_level"], range_info["start"], range_info["end"]
+            )
+
+        return background_music
+
+    def _cleanup_job_dir(self, job_temp_dir):
+        """Clean up job temporary directory"""
+
+        try:
+            import shutil
+
+            if os.path.exists(job_temp_dir):
+                shutil.rmtree(job_temp_dir)
+                logger.info(f"Cleaned up job temp directory: {job_temp_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup job temp directory: {str(e)}")

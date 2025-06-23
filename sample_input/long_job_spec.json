@@ -1,0 +1,332 @@
+{
+  "$schema": "https://your-domain.com/schemas/video-job-v2.json",
+  "metadata": {
+    "projectId": "tmmm",
+    "title": "Tyler Perry Paychecks - Hits and Flops",
+    "tags": [
+      "tyler perry",
+      "paychecks"
+    ]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "/Users/ossama/Downloads/Video/mp4-640x360px-exp_8npfb16owjo1-C0eUh.mp4"
+    },
+    "audio": [
+      {
+        "id": "music_a_huevo",
+        "source": "./lib/music/A Huevo - Luna Cantina.mp3"
+      },
+      {
+        "id": "music_island_life",
+        "source": "./lib/music/Island Life - Telecasted.mp3"
+      },
+      {
+        "id": "music_shake_it",
+        "source": "lib/music/Shake It - Aakash Gandhi.mp3"
+      },
+      {
+        "id": "sfx_swoosh",
+        "source": "./lib/sfx/swoosh.wav"
+      },
+      {
+        "id": "sfx_cheers",
+        "source": "./lib/sfx/cheers.WAV"
+      },
+      {
+        "id": "sfx_whistles",
+        "source": "./lib/sfx/whistles.WAV"
+      },
+      {
+        "id": "sfx_subscribe",
+        "source": "./lib/sfx/subscribe.WAV"
+      },
+      {
+        "id": "sfx_applause",
+        "source": "./lib/sfx/applause.WAV"
+      },
+      {
+        "id": "sfx_boos",
+        "source": "./lib/sfx/boos.WAV"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "type": "backgroundMusic",
+      "details": {
+        "playlist": [
+          "music_a_huevo",
+          "music_island_life",
+          "music_shake_it"
+        ],
+        "loop": true,
+        "volume": 0.2,
+        "crossfadeDuration": 2.0
+      }
+    },
+    {
+      "start": 0,
+      "type": "tts",
+      "details": {
+        "text": "What if I told you Tyler Perry isn't just a filmmaker, but a financial titan whose career earnings will absolutely shock you? I'm your host, and this is The Movie Money Man, where I dive deep into the staggering numbers behind Hollywood's biggest players. Today, we're unraveling the financial empire of Tyler Perry.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 49,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 49,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry made a bold move on Diary of a Mad Black Woman, funding half the $5.5 million budget himself! Instead of a big upfront salary, he negotiated for 50% of the profits and ownership of the film rights. This paid off massively when the movie earned over $200 million across box office, video, and TV. His estimated total compensation from this groundbreaking deal? A staggering $75 million!",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 72,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 73,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_cheers",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 77,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_whistles",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 137,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 137,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry took his hit stage play, A Madea Christmas, and filmed it for direct-to-video release! On an estimated budget of just $3 million, he didn't take a standard salary. His unique ownership model meant he earned a massive share from DVD sales and streaming. His estimated total payday from this project is an incredible $15 million! It's another prime example of how his efficient production model generated massive wealth from diverse content streams.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 163,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 192,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 192,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry took a rare step outside his usual model for Alex Cross! Known for funding his own films and taking massive backend profits, he instead accepted a reported $5 million upfront salary just to act in this movie. This was a major departure from his typical multi-hyphenate, ownership-driven deals, showing he was willing to take a traditional acting paycheck for the right role outside his studio.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 215,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 230,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_subscribe",
+        "volume": 0.8,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 262,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_applause",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 294,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 294,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry took his hit stage play, Madea on the Run, and filmed it for direct-to-video and streaming release! On an estimated budget of just $1 million, he didn't take a standard salary. His unique ownership model meant he earned a massive share from DVD sales and streaming. With estimated total revenue around $55 million, his estimated total payday from this project is an incredible $40 million! It's another prime example of how his efficient production model generated massive wealth from diverse content streams.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 323,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 366,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 366,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry's deal for A Fall from Grace on Netflix was truly unique! He reportedly shot the film in just 5 days on an estimated $2 million budget. But instead of a small salary, his compensation was tied to his massive Netflix deal. With the film hitting 26 million views in its first week, his estimated total payday from this project alone is around $25 million! It's an incredible example of his efficient production model combined with the lucrative world of streaming deals.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 395,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 410,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_boos",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    },
+    {
+      "start": 442,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 442,
+      "type": "tts",
+      "details": {
+        "text": "Tyler Perry brought Madea to Netflix with A Madea Homecoming! On a lean $20 million budget, he didn't take a standard salary. His unique deal with Netflix meant he earned a massive share tied to the film's performance on the platform. With the film surpassing 1 billion minutes watched, his estimated total payday is an incredible $50 million! It's another prime example of how his efficient production model combined with lucrative streaming deals generates massive wealth.",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 468,
+      "type": "audio",
+      "details": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 504,
+      "type": "tts",
+      "details": {
+        "text": "And there you have it: the truly astonishing financial story of Tyler Perry. What an incredible journey through the numbers! If this deep dive into his career earnings opened your eyes, please hit that like button right now. Don't forget to subscribe to The Movie Money Man for more exclusive financial analyses from Hollywood. And crucially, I want to hear from you in the comments: which actor or filmmaker's financial empire should I dissect next? Thank you so much for watching, and I'll see you on the next one!",
+        "voiceId": "Matthew",
+        "engine": "generative",
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    }
+  ],
+  "output": {
+    "destination": "./dist/tyler-perry",
+    "filename": "tyler_perry_paychecks_hits_and_flops_the-movie-money-man-sfx.mp4"
+  }
+}

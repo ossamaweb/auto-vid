@@ -48,7 +48,6 @@ Defines the continuous background audio track. There should only be one event of
   - `"loop"` (Boolean): If `true`, the entire playlist will repeat if the video is longer than the playlist's combined duration.
   - `"volume"` (Float, 0.0-1.0): The base volume for the background music.
   - `"crossfadeDuration"` (Float, Optional): The time in seconds to crossfade between tracks in the playlist.
-  - `"duckingFadeDuration"` (Float, Optional): The time in seconds it takes for the music to fade down before a ducking event and fade back up after.
 
 ##### Event Type: `tts` (Text-to-Speech)
 
@@ -59,11 +58,9 @@ Defines a voiceover event.
 - `"details"` (Object):
   - `"text"` (String): The text to be converted to speech.
   - `"voiceId"` (String): The AWS Polly voice ID to use (e.g., `"Matthew"`, `"Joanna"`).
-  - `"triggersDucking"` (Boolean, Optional, Default: `true`): If `false`, this TTS clip will _not_ cause the background music to duck.
-  - `"duckingLevel"` (Float, 0.0-1.0, Optional): The volume level the background music should duck to during this clip. Overrides the global setting.
   - `"volume"` (Float, 0.0-1.0, Optional): The volume of this specific TTS clip.
-  - `"fadeInDuration"` (Float, Optional): Time in seconds for this clip to fade in.
-  - `"fadeOutDuration"` (Float, Optional): Time in seconds for this clip to fade out.
+  - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
+  - `"duckingFadeDuration"` (Float, Optional): Time in seconds for the ducking fade transition (only used if duckingLevel is specified).
 
 ##### Event Type: `audio`
 
@@ -73,7 +70,9 @@ Defines a sound effect or other pre-recorded audio clip event.
 - `"type": "audio"`
 - `"details"` (Object):
   - `"assetId"` (String): The ID of the audio asset to play from the `assets` section.
-  - All other properties are the same as `tts` (`triggersDucking`, `duckingLevel`, `volume`, etc.).
+  - `"volume"` (Float, 0.0-1.0, Optional): The volume of this specific audio clip.
+  - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
+  - `"duckingFadeDuration"` (Float, Optional): Time in seconds for the ducking fade transition (only used if duckingLevel is specified).
 
 #### 4. `output` (Object, Required)
 
@@ -81,7 +80,6 @@ Defines the properties of the final, rendered video file.
 
 - `"destination"` (String): The URI of the destination folder (e.g., `s3://my-bucket/outputs/`).
 - `"filename"` (String): The name of the final output file (e.g., `"final-video.mp4"`).
-- `"format"` (String): The container format (e.g., `"mp4"`).
 
 ---
 
@@ -91,14 +89,14 @@ Defines the properties of the final, rendered video file.
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
   "metadata": {
-    "projectId": "proj_tyler_perry_101",
-    "title": "Tyler Perry Paychecks - Hits and Flops",
-    "tags": ["tyler perry", "finance", "movies", "box office"]
+    "projectId": "project_name",
+    "title": "My Automated Video v1",
+    "tags": ["automated"]
   },
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "s3://my-hackathon-bucket-inputs/tyler-perry-raw.mp4"
+      "source": "s3://my-hackathon-bucket-inputs/input.mp4"
     },
     "audio": [
       {
@@ -131,7 +129,8 @@ Defines the properties of the final, rendered video file.
       "details": {
         "text": "What if I told you Tyler Perry isn't just a filmmaker, but a financial titan whose career earnings will absolutely shock you?",
         "voiceId": "Matthew",
-        "duckingLevel": 0.1
+        "duckingLevel": 0.1,
+        "duckingFadeDuration": 1.0
       }
     },
     {
@@ -139,8 +138,7 @@ Defines the properties of the final, rendered video file.
       "type": "audio",
       "details": {
         "assetId": "sfx_swoosh",
-        "volume": 0.8,
-        "triggersDucking": false
+        "volume": 0.8
       }
     },
     {
@@ -149,7 +147,8 @@ Defines the properties of the final, rendered video file.
       "details": {
         "text": "Tyler Perry made a bold move on Diary of a Mad Black Woman, funding half the $5.5 million budget himself!",
         "voiceId": "Matthew",
-        "duckingLevel": 0.1
+        "duckingLevel": 0.1,
+        "duckingFadeDuration": 1.0
       }
     },
     {
@@ -159,14 +158,13 @@ Defines the properties of the final, rendered video file.
         "assetId": "sfx_cheer",
         "volume": 0.9,
         "duckingLevel": 0.4,
-        "fadeOutDuration": 1.5
+        "duckingFadeDuration": 0.5
       }
     }
   ],
   "output": {
     "destination": "s3://my-hackathon-bucket-outputs/",
-    "filename": "tyler-perry-final-v2.mp4",
-    "format": "mp4"
+    "filename": "tyler-perry-final-v2.mp4"
   }
 }
 ```
