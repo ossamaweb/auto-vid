@@ -131,8 +131,17 @@ class VideoProcessor:
 
             # Phase 8: Upload result
             logger.info("Uploading result...")
+            destination = job_spec.output.destination
+            if not destination:
+                # Use default managed bucket
+                bucket_name = os.environ.get('AUTO_VID_BUCKET')
+                if bucket_name:
+                    destination = f"s3://{bucket_name}/outputs/"
+                else:
+                    raise ValueError("No output destination specified and no default bucket available")
+            
             result_url = self.asset_manager.upload_result(
-                local_output, job_spec.output.destination, output_filename
+                local_output, destination, output_filename
             )
 
             # Cleanup

@@ -82,7 +82,7 @@ Defines a sound effect or other pre-recorded audio clip event.
 
 Defines the properties of the final, rendered video file.
 
-- `"destination"` (String, Required): The URI of the destination folder (e.g., `s3://my-bucket/outputs/`).
+- `"destination"` (String, Optional): The URI of the destination folder (e.g., `s3://my-bucket/outputs/`). If not specified, uses the managed S3 bucket created by the CloudFormation stack.
 - `"filename"` (String, Required): The name of the final output file (e.g., `"final-video.mp4"`).
 - `"encoding"` (Object, Optional): MP4 video encoding parameters (uses defaults if not specified).
   - `"preset"` (String, Default: "medium"): FFmpeg preset for encoding speed vs quality tradeoff.
@@ -90,9 +90,58 @@ Defines the properties of the final, rendered video file.
   - `"audio_bitrate"` (String, Optional): Audio bitrate (e.g., "128k", "320k").
   - `"fps"` (Float, Optional): Output frame rate.
 
+### S3 Bucket Usage
+
+The system supports both managed and custom S3 buckets:
+
+**Managed Bucket (Recommended for beginners):**
+- Automatically created during deployment
+- Bucket name: `auto-vid-{stack-name}-{account-id}`
+- Available to Lambda functions via `AUTO_VID_BUCKET` environment variable
+- Used when `destination` is omitted from output configuration
+- Organized with `/assets/` and `/outputs/` prefixes
+- Example bucket name: `auto-vid-mystack-123456789012`
+
+**Custom Bucket (Advanced users):**
+- Specify full S3 URI in asset sources and output destination
+- Requires proper IAM permissions for the Lambda functions
+- Example: `s3://my-custom-bucket/my-folder/`
+
 ---
 
 ### Complete Example: `job_spec.json`
+
+```json
+{
+  "$schema": "https://your-domain.com/schemas/video-job-v2.json",
+  "metadata": {
+    "projectId": "simple_example",
+    "title": "Background Music Only Example"
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "s3://auto-vid-mystack-123456789012/assets/input.mp4"
+    },
+    "audio": [
+      {
+        "id": "bgm_track",
+        "source": "s3://auto-vid-mystack-123456789012/assets/background.mp3"
+      }
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["bgm_track"],
+    "volume": 0.4
+  },
+  "timeline": [],
+  "output": {
+    "filename": "video-with-music.mp4"
+  }
+}
+```
+
+### Complete Example with Custom S3 Bucket: `job_spec.json`
 
 ```json
 {
@@ -181,7 +230,6 @@ Defines the properties of the final, rendered video file.
     }
   ],
   "output": {
-    "destination": "s3://my-hackathon-bucket-outputs/",
     "filename": "tyler-perry-final-v2.mp4",
     "encoding": {
       "preset": "fast",

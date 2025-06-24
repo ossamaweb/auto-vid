@@ -79,7 +79,7 @@ class Encoding(BaseModel):
 
 
 class Output(BaseModel):
-    destination: str
+    destination: Optional[str] = None
     filename: str
     encoding: Optional[Encoding] = None
 
