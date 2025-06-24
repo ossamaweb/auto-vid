@@ -3,8 +3,7 @@ import logging
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
 from asset_manager import AssetManager
 from tts_generator import TTSGenerator
-from job_spec_models import JobSpec
-from pydantic import ValidationError
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +20,8 @@ class VideoProcessor:
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
-    def process_video_job(self, job_id, job_spec_dict):
+    def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
-        # Validate job spec
-        try:
-            job_spec = JobSpec(**job_spec_dict)
-        except ValidationError as e:
-            # Format validation errors in a user-friendly way
-            error_messages = []
-            for error in e.errors():
-                field_path = " -> ".join(str(loc) for loc in error['loc'])
-                error_msg = error['msg']
-                input_val = error.get('input', 'N/A')
-                error_messages.append(f"Field '{field_path}': {error_msg} (got: {input_val})")
-            
-            formatted_errors = "\n  - " + "\n  - ".join(error_messages)
-            logger.error(f"Job spec validation failed:{formatted_errors}")
-            raise ValueError(f"Invalid job specification:{formatted_errors}")
 
         # Create unique job directory
         job_temp_dir = os.path.join(self.temp_dir, job_id)

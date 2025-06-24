@@ -1,43 +1,54 @@
 import json
 import uuid
 import boto3
+import sys
+import os
 from datetime import datetime
+
+# Add shared directory to path
+shared_path = os.path.join(os.path.dirname(__file__), "..", "shared")
+sys.path.insert(0, os.path.abspath(shared_path))
+from job_validator import validate_job_spec  # noqa: E402
+
 
 def lambda_handler(event, context):
     try:
-        body = json.loads(event['body'])
-        job_spec = body['jobSpec']
-        
+        body = json.loads(event["body"])
+        job_spec_dict = body["jobSpec"]
+
+        # Validate job spec
+        try:
+            job_spec = validate_job_spec(job_spec_dict)
+        except ValueError as e:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": str(e)}),
+            }
+
         job_id = str(uuid.uuid4())
-        
+
         # Send job to SQS queue
-        sqs = boto3.client('sqs')
-        queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/auto-vid-jobs'
-        
+        sqs = boto3.client("sqs")
+        queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/auto-vid-jobs"
+
         message = {
-            'jobId': job_id,
-            'jobSpec': job_spec,
-            'submittedAt': datetime.utcnow().isoformat()
+            "jobId": job_id,
+            "jobSpec": job_spec_dict,
+            "submittedAt": datetime.utcnow().isoformat(),
         }
-        
-        sqs.send_message(
-            QueueUrl=queue_url,
-            MessageBody=json.dumps(message)
-        )
-        
+
+        sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps(message))
+
         return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'jobId': job_id,
-                'status': 'submitted',
-                'message': 'Job submitted successfully'
-            })
+            "statusCode": 200,
+            "body": json.dumps(
+                {
+                    "jobId": job_id,
+                    "status": "submitted",
+                    "message": "Job submitted successfully",
+                }
+            ),
         }
-        
+
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e)
-            })
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}

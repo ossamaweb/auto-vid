@@ -6,18 +6,20 @@ import uuid
 import logging
 from dotenv import load_dotenv
 
+
+# Add src to path for imports
+sys.path.append("src/video_processor")
+sys.path.append("src/shared")
+from video_processor import VideoProcessor
+from job_validator import validate_job_spec
+
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 # Load environment variables for local testing
 load_dotenv()
-
-# Add src to path for imports
-sys.path.append("src/video_processor")
-from video_processor import VideoProcessor
 
 
 def test_video_processing():
@@ -27,13 +29,16 @@ def test_video_processing():
 
     # Load sample job spec
     with open("sample_input/long_job_spec.json", "r") as f:
-        job_spec = json.load(f)
+        job_spec_dict = json.load(f)
 
     try:
+        # Validate job spec
+        job_spec = validate_job_spec(job_spec_dict)
+
         # Use local tmp directory in repo
         processor = VideoProcessor(temp_dir="./tmp")
         result_url = processor.process_video_job(job_id, job_spec)
-        print(f"✅ Video processing completed successfully!")
+        print("✅ Video processing completed successfully!")
         print(f"📁 Result URL: {result_url}")
 
     except Exception as e:
