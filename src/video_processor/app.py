@@ -1,6 +1,10 @@
 import json
 import boto3
+import logging
 from video_processor import VideoProcessor
+
+# Configure logging for Lambda
+logging.basicConfig(level=logging.INFO)
 
 
 def lambda_handler(event, context):

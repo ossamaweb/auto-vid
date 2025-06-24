@@ -3,35 +3,42 @@ import logging
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
 from asset_manager import AssetManager
 from tts_generator import TTSGenerator
+from job_spec_models import JobSpec
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
-# Default values
-DEFAULTS = {
-    "tts_volume": 1.0,
-    "tts_ducking_fade_duration": 1.0,
-    "tts_voice_id": "Joanna",
-    "tts_engine": "neural",
-    "audio_volume": 0.5,
-    "audio_ducking_fade_duration": 0.2,
-    "background_music_volume": 0.2,
-    "background_music_cross_fade_duration": 2.0,
-    "background_music_loop": True,
-    "temp_dir": "./tmp",  # Use local tmp directory in repo
-}
+# Default temp directory
+DEFAULT_TEMP_DIR = "./tmp"
 
 
 class VideoProcessor:
     def __init__(self, temp_dir=None):
         self.asset_manager = AssetManager()
         self.tts_generator = TTSGenerator()
-        self.temp_dir = temp_dir or DEFAULTS["temp_dir"]
+        self.temp_dir = temp_dir or DEFAULT_TEMP_DIR
 
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
-    def process_video_job(self, job_id, job_spec):
+    def process_video_job(self, job_id, job_spec_dict):
         """Process a complete video job from job specification"""
+        # Validate job spec
+        try:
+            job_spec = JobSpec(**job_spec_dict)
+        except ValidationError as e:
+            # Format validation errors in a user-friendly way
+            error_messages = []
+            for error in e.errors():
+                field_path = " -> ".join(str(loc) for loc in error['loc'])
+                error_msg = error['msg']
+                input_val = error.get('input', 'N/A')
+                error_messages.append(f"Field '{field_path}': {error_msg} (got: {input_val})")
+            
+            formatted_errors = "\n  - " + "\n  - ".join(error_messages)
+            logger.error(f"Job spec validation failed:{formatted_errors}")
+            raise ValueError(f"Invalid job specification:{formatted_errors}")
+
         # Create unique job directory
         job_temp_dir = os.path.join(self.temp_dir, job_id)
         os.makedirs(job_temp_dir, exist_ok=True)
@@ -40,13 +47,13 @@ class VideoProcessor:
             # Phase 1: Download audio assets first (fast fail)
             logger.info("Downloading audio assets...")
             audio_assets = self._download_audio_assets(
-                job_spec["assets"]["audio"], job_temp_dir
+                job_spec.assets.audio, job_temp_dir
             )
 
             # Phase 2: Download video asset
             logger.info("Downloading video asset...")
             video_path = self.asset_manager.download_asset(
-                job_spec["assets"]["video"]["source"], job_temp_dir
+                job_spec.assets.video.source, job_temp_dir
             )
 
             # Phase 3: Load video and get duration
@@ -59,41 +66,39 @@ class VideoProcessor:
             audio_clips = []
             ducking_ranges = []
 
-            for event in job_spec["timeline"]:
-                if event["type"] == "backgroundMusic":
-                    background_music = self._create_background_music(
-                        event, audio_assets, video_duration
-                    )
-                elif event["type"] == "tts":
+            # Create background music from top-level backgroundMusic section
+            if job_spec.backgroundMusic:
+                background_music = self._create_background_music(
+                    job_spec.backgroundMusic, audio_assets, video_duration
+                )
+
+            for event in job_spec.timeline:
+                if event.type == "tts":
                     clip = self._create_tts_clip(event, job_temp_dir)
                     audio_clips.append(clip)
                     # Collect ducking range if duckingLevel is specified
-                    ducking_level = event["details"].get("duckingLevel")
-                    fade_duration = event["details"].get(
-                        "duckingFadeDuration", DEFAULTS["tts_ducking_fade_duration"]
-                    )
+                    ducking_level = event.data.duckingLevel
+                    fade_duration = event.data.duckingFadeDuration
                     if ducking_level is not None:
                         ducking_ranges.append(
                             {
-                                "start": event["start"],
-                                "end": event["start"] + clip.duration,
+                                "start": event.start,
+                                "end": event.start + clip.duration,
                                 "ducking_level": ducking_level,
                                 "fade_duration": fade_duration,
                             }
                         )
-                elif event["type"] == "audio":
+                elif event.type == "audio":
                     clip = self._create_audio_clip(event, audio_assets)
                     audio_clips.append(clip)
                     # Collect ducking range if duckingLevel is specified
-                    ducking_level = event["details"].get("duckingLevel")
-                    fade_duration = event["details"].get(
-                        "duckingFadeDuration", DEFAULTS["audio_ducking_fade_duration"]
-                    )
+                    ducking_level = event.data.duckingLevel
+                    fade_duration = event.data.duckingFadeDuration
                     if ducking_level is not None:
                         ducking_ranges.append(
                             {
-                                "start": event["start"],
-                                "end": event["start"] + clip.duration,
+                                "start": event.start,
+                                "end": event.start + clip.duration,
                                 "ducking_level": ducking_level,
                                 "fade_duration": fade_duration,
                             }
@@ -114,26 +119,36 @@ class VideoProcessor:
             logger.info("Creating final video...")
             final_video = video.with_audio(final_audio)
 
-            output_filename = job_spec["output"].get("filename", "output.mp4")
+            output_filename = job_spec.output.filename
             if not output_filename.lower().endswith(".mp4"):
                 output_filename += ".mp4"
+
             local_output = os.path.join(job_temp_dir, output_filename)
             temp_audio_path = os.path.join(job_temp_dir, "temp_audio.m4a")
+
+            # Get encoding parameters from job spec (Pydantic provides defaults)
+            encoding = job_spec.output.encoding
+
+            is_lambda = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 
             final_video.write_videofile(
                 local_output,
                 codec="libx264",
                 audio_codec="aac",
+                preset=encoding.preset if encoding else "medium",
+                bitrate=encoding.bitrate if encoding else None,
+                audio_bitrate=encoding.audio_bitrate if encoding else None,
+                fps=encoding.fps if encoding else None,
                 temp_audiofile=temp_audio_path,
                 remove_temp=True,
-                threads=6,
-                preset="medium",
+                threads=os.cpu_count() if is_lambda else 6,
+                logger=None if is_lambda else "bar",
             )
 
             # Phase 8: Upload result
             logger.info("Uploading result...")
             result_url = self.asset_manager.upload_result(
-                local_output, job_spec["output"]["destination"], output_filename
+                local_output, job_spec.output.destination, output_filename
             )
 
             # Cleanup
@@ -158,21 +173,16 @@ class VideoProcessor:
         """Download all audio assets and return lookup dict"""
         assets = {}
         for asset in audio_assets:
-            local_path = self.asset_manager.download_asset(
-                asset["source"], job_temp_dir
-            )
-            assets[asset["id"]] = local_path
+            local_path = self.asset_manager.download_asset(asset.source, job_temp_dir)
+            assets[asset.id] = local_path
         return assets
 
-    def _create_background_music(self, event, audio_assets, video_duration):
+    def _create_background_music(self, bg_music_config, audio_assets, video_duration):
         """Create background music from playlist with crossfading"""
-        details = event["details"]
-        playlist = details["playlist"]
-        volume = details.get("volume", DEFAULTS["background_music_volume"])
-        background_music_loop = details.get("loop", DEFAULTS["background_music_loop"])
-        crossfade_duration = details.get(
-            "crossfadeDuration", DEFAULTS["background_music_cross_fade_duration"]
-        )
+        playlist = bg_music_config.playlist
+        volume = bg_music_config.volume
+        background_music_loop = bg_music_config.loop
+        crossfade_duration = bg_music_config.crossfadeDuration
 
         if not playlist:
             return None
@@ -253,16 +263,24 @@ class VideoProcessor:
 
     def _create_tts_clip(self, event, job_temp_dir):
         """Create TTS audio clip"""
-        details = event["details"]
-        start_time = event["start"]
+        data = event.data
+        start_time = event.start
+
+        # Get provider config (Pydantic provides defaults)
+        provider = data.provider
+        provider_config = data.providerConfig
+
+        # Extract AWS Polly config
+        voice_id = provider_config.voiceId
+        engine = provider_config.engine
 
         # Generate TTS
         tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
         self.tts_generator.generate_speech(
-            details["text"],
+            data.text,
             tts_path,
-            details.get("voiceId", DEFAULTS["tts_voice_id"]),
-            details.get("engine", DEFAULTS["tts_engine"]),
+            voice_id,
+            engine,
         )
 
         # Create clip
@@ -270,16 +288,16 @@ class VideoProcessor:
         clip = clip.with_start(start_time)
 
         # Apply volume
-        volume = details.get("volume", DEFAULTS["tts_volume"])
+        volume = data.volume
         clip = clip.with_volume_scaled(volume)
 
         return clip
 
     def _create_audio_clip(self, event, audio_assets):
         """Create audio clip from asset"""
-        details = event["details"]
-        start_time = event["start"]
-        asset_id = details["assetId"]
+        data = event.data
+        start_time = event.start
+        asset_id = data.assetId
 
         if asset_id not in audio_assets:
             raise ValueError(f"Audio asset {asset_id} not found")
@@ -289,7 +307,7 @@ class VideoProcessor:
         clip = clip.with_start(start_time)
 
         # Apply volume
-        volume = details.get("volume", DEFAULTS["audio_volume"])
+        volume = data.volume
         clip = clip.with_volume_scaled(volume)
 
         return clip
