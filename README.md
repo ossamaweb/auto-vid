@@ -1,174 +1,217 @@
-# Auto-Vid Serverless Video Processing
+# Auto-Vid: Serverless Video Processing Platform
 
-A serverless video processing application built with AWS SAM that automatically generates videos with TTS, background music, and sound effects using a declarative JSON job specification.
+A production-ready serverless video processing application that automatically generates videos with AI-powered text-to-speech, background music, and sound effects using declarative JSON job specifications.
+
+## ✨ Key Features
+
+- **🎬 Professional Video Processing** - MoviePy-powered video editing with precise timeline control
+- **🗣️ AI Text-to-Speech** - AWS Polly with 90+ voices, multiple engines, and SSML support
+- **🎵 Smart Audio Mixing** - Background music with crossfading, ducking, and volume control
+- **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
+- **🔒 Production Security** - IAM least-privilege, input validation, and error handling
+- **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
 ## 🏗️ Architecture
 
-### Lambda Functions
+### Core Components
 
-- **Submit Job API** (`src/submit_job/`) - Validates job specs and queues them via SQS
-- **Video Processor** (`src/video_processor/`) - Processes videos using MoviePy, AWS Polly TTS, and advanced audio mixing
-- **Status API** - Returns job status and progress
+- **Submit Job API** - Validates job specs and queues processing via SQS
+- **Video Processor** - Handles video generation with MoviePy and AWS Polly
+- **Status API** - Returns job progress and completion status
+- **Managed S3 Bucket** - Automatic storage for assets and outputs
+- **Shared Layer** - Pydantic models and validation logic
 
-### Shared Components
+### AWS Services Used
 
-- **Job Spec Models** (`src/shared/job_spec_models.py`) - Pydantic models for validation
-- **Job Validator** (`src/shared/job_validator.py`) - Centralized validation logic
-
-### Key Features
-
-- **Early Validation** - Job specs validated at submission to prevent processing invalid jobs
-- **Hybrid Error Handling** - Distinguishes permanent vs transient failures for proper retry logic
-- **Smart Audio Processing** - Background music with crossfading and ducking
-- **Asset Management** - Supports S3, HTTP/HTTPS, and local file sources
+- **Lambda** - Serverless compute with 15-minute timeout support
+- **API Gateway** - RESTful API endpoints
+- **SQS** - Reliable job queuing with dead letter handling
+- **S3** - Asset storage with lifecycle management
+- **Polly** - Neural and generative text-to-speech
+- **CloudFormation** - Infrastructure as Code via SAM
 
 ## 🚀 Quick Start
 
-### Local Development
+### Prerequisites
 
-1. Install dependencies:
+- AWS CLI configured with appropriate permissions
+- SAM CLI installed
+- Python 3.12+
 
-```bash
-pip install -r requirements.txt
-```
-
-2. Set up environment variables:
+### Deploy to AWS
 
 ```bash
-cp .env.example .env
-# Edit .env with your AWS credentials
-```
+# Clone and deploy
+git clone <repository-url>
+cd auto-vid
 
-3. Test locally:
-
-```bash
-# Test full video processing pipeline
-python3 test_local.py
-
-# Test TTS generation only
-python3 test_tts_local.py
-```
-
-### Serverless Deployment
-
-1. Build and deploy:
-
-```bash
+# Build and deploy
 sam build
 sam deploy --guided
+
+# Note the API Gateway URL from outputs
 ```
 
-2. Submit a job:
+### Submit Your First Job
 
 ```bash
-curl -X POST https://your-api-gateway-url/submit \
+# Simple background music example
+curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -d @sample_input/long_job_spec.json
-```
+  -d '{
+    "assets": {
+      "video": {"id": "main", "source": "s3://your-bucket/video.mp4"},
+      "audio": [{"id": "music", "source": "s3://your-bucket/music.mp3"}]
+    },
+    "backgroundMusic": {"playlist": ["music"], "volume": 0.3},
+    "timeline": [],
+    "output": {"filename": "result.mp4"}
+  }'
 
-3. Check job status:
-
-```bash
-curl https://your-api-gateway-url/status/{jobId}
+# Check status
+curl https://your-api-url/status/{jobId}
 ```
 
 ## 📋 Job Specification
 
-The heart of Auto-Vid is the **Video Job Specification** - a declarative JSON format that describes:
+Auto-Vid uses a declarative JSON format for video generation:
 
-### Structure
+### Basic Structure
 
-- **metadata** (optional): Project info, title, tags
-- **assets**: Video and audio files to use
-  - **video**: Main background video
-  - **audio**: Array of audio assets (music, SFX)
-- **backgroundMusic** (optional): Continuous background audio with crossfading
-- **timeline**: Timed events (TTS, audio clips) with ducking support
-- **output**: Destination and encoding settings
+```json
+{
+  "assets": {
+    "video": {"id": "main_video", "source": "s3://bucket/video.mp4"},
+    "audio": [
+      {"id": "bgm", "source": "s3://bucket/music.mp3"},
+      {"id": "sfx", "source": "s3://bucket/sound.wav"}
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["bgm"],
+    "volume": 0.3,
+    "crossfadeDuration": 2.0
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "type": "tts",
+      "data": {
+        "text": "Welcome to Auto-Vid!",
+        "providerConfig": {
+          "voiceId": "Joanna",
+          "engine": "neural"
+        },
+        "duckingLevel": 0.2
+      }
+    }
+  ],
+  "output": {"filename": "my-video.mp4"}
+}
+```
 
-### Validation
+### Advanced Features
 
-- **Pydantic Models** - Strong typing and validation
-- **Early Validation** - Errors caught at submission time
-- **Detailed Error Messages** - Clear feedback on validation failures
+- **Empty Timeline Support** - Create videos with just background music
+- **Audio Ducking** - Automatically lower background music during speech
+- **Multiple TTS Engines** - Standard, neural, long-form, and generative
+- **SSML Support** - Advanced speech markup for pronunciation control
+- **Crossfading** - Smooth transitions between background music tracks
 
-See `SCHEMA.md` for complete documentation and `sample_input/long_job_spec.json` for examples.
+See [SCHEMA.md](SCHEMA.md) for complete documentation.
 
-## 🧪 Testing
+## 🎯 Use Cases
+
+### Content Creation
+- **YouTube Videos** - Automated narration with background music
+- **Podcasts** - Convert text to audio with intro/outro music
+- **Educational Content** - Lecture videos with timed sound effects
+
+### Business Applications
+- **Product Demos** - Automated video generation from scripts
+- **Training Materials** - Consistent narration across modules
+- **Marketing Videos** - Scalable video content production
+
+### Creative Projects
+- **Storytelling** - Audio books with background ambiance
+- **Game Development** - Automated cutscene generation
+- **Social Media** - Batch video creation for campaigns
+
+## 🛠️ Development
 
 ### Local Testing
 
 ```bash
-# Test with sample job spec
-python3 test_local.py
+# Install dependencies
+pip install -r requirements.txt
 
-# Test TTS generation
-python3 test_tts_local.py
+# Test locally (requires AWS credentials)
+python test_local.py
 
-# Test individual Lambda functions
-sam local invoke SubmitJobFunction -e events/event-submit-job.json
-sam local invoke VideoProcessorFunction -e events/event-process-job.json
+# Test individual components
+sam local invoke SubmitJobFunction -e events/submit-job.json
 ```
 
-### Container Deployment
-
-Video Processor uses Docker for better MoviePy performance:
-
-```bash
-# Build container image
-docker build -t auto-vid-processor ./src/video_processor
-
-# Deploy with container image
-sam deploy --guided
-```
-
-## 🎯 Features
-
-### Video Processing
-
-- **MoviePy** - Professional video editing capabilities
-- **AWS Polly TTS** - High-quality text-to-speech with multiple voices
-- **Smart Audio Mixing** - Background music with crossfading and ducking
-- **Timeline Events** - Precise timing control for TTS and sound effects
-
-### Architecture
-
-- **Pydantic Validation** - Type-safe job specifications
-- **Shared Modules** - Reusable validation and models across Lambda functions
-- **Error Handling** - Distinguishes permanent vs transient failures
-- **SQS Integration** - Reliable job queuing with retry logic
-
-### Asset Management
-
-- **Multi-source Support** - S3, HTTP/HTTPS, and local files
-- **Automatic Downloads** - Assets fetched and cached during processing
-- **Flexible Output** - S3 or local destination support
-
-### Deployment
-
-- **Serverless Scale** - Handles multiple jobs concurrently
-- **Container Support** - Docker images for heavy processing workloads
-- **AWS SAM** - Infrastructure as Code with easy deployment
-
-## 📁 Project Structure
+### Project Structure
 
 ```
-src/
-├── shared/                    # Shared modules
-│   ├── job_spec_models.py    # Pydantic models
-│   └── job_validator.py      # Validation logic
-├── submit_job/               # Job submission Lambda
-│   └── app.py               # API handler with validation
-├── video_processor/          # Video processing Lambda
-│   ├── app.py               # SQS handler with error handling
-│   ├── video_processor.py   # Core processing logic
-│   ├── asset_manager.py     # Asset download/upload
-│   └── tts_generator.py     # AWS Polly integration
-sample_input/                 # Example job specifications
-events/                       # Test events for SAM local
-SCHEMA.md                    # Job specification documentation
+├── src/
+│   ├── submit_job/           # Job submission API
+│   ├── get_status/           # Status checking API  
+│   └── video_processor/      # Core video processing
+│       ├── video_processor.py
+│       ├── asset_manager.py  # S3 integration
+│       └── tts_generator.py  # AWS Polly integration
+├── layers/auto-vid-shared/   # Shared Pydantic models
+│   ├── job_spec_models.py
+│   ├── job_validator.py
+│   └── polly_constants.py    # Voice/language definitions
+├── sample_input/             # Example job specifications
+├── template.yaml             # SAM infrastructure
+└── SCHEMA.md                 # Complete API documentation
 ```
 
-## 🏆 AWS Lambda Hackathon
+## 🔧 Configuration
 
-Built for the AWS Lambda Hackathon - showcasing serverless video processing at scale with modern Python practices and robust error handling!
+### Environment Variables
+
+- `AUTO_VID_BUCKET` - Managed S3 bucket name (auto-configured)
+- `AWS_LAMBDA_FUNCTION_NAME` - Detected automatically in Lambda
+
+### Resource Naming
+
+All AWS resources use consistent naming:
+- S3 Bucket: `auto-vid-{stack-name}-{account-id}`
+- SQS Queue: `auto-vid-jobs-{stack-name}-{account-id}`
+- Lambda Layer: `auto-vid-shared-{stack-name}-{account-id}`
+
+### Managed S3 Bucket
+
+- **Automatic Creation** - No manual S3 setup required
+- **Organized Structure** - `/assets/` and `/outputs/` prefixes
+- **Security** - Private bucket with proper IAM policies
+- **Flexibility** - Can override with custom S3 URIs
+
+## 📊 Performance & Limits
+
+### Lambda Configuration
+- **Memory**: 3008 MB for video processing
+- **Timeout**: 15 minutes maximum
+- **Storage**: 10 GB ephemeral storage
+- **Concurrency**: Configurable based on workload
+
+### Supported Formats
+- **Video Input**: MP4, AVI, MOV, MKV
+- **Audio Input**: MP3, WAV, M4A, FLAC
+- **Video Output**: MP4 with H.264/AAC
+
+## 🏆 Production Ready
+
+- **✅ Input Validation** - Comprehensive Pydantic models
+- **✅ Error Handling** - Retry logic and detailed error messages
+- **✅ Security** - IAM least privilege and input sanitization
+- **✅ Monitoring** - CloudWatch logs and metrics
+- **✅ Scalability** - SQS queuing and Lambda concurrency
+- **✅ Cost Optimization** - Pay-per-use serverless architecture
+
+Built for the **AWS Lambda Hackathon** - demonstrating enterprise-grade serverless video processing! 🚀

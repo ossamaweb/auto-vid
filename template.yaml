@@ -93,13 +93,13 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub "auto-vid-jobs-${AWS::StackName}-${AWS::AccountId}"
-      VisibilityTimeoutSeconds: 960
+      VisibilityTimeout: 960
 
 Outputs:
   SubmitJobApi:
     Description: "API Gateway endpoint URL for Submit Job function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/submit/"
-  
+
   AutoVidBucket:
     Description: "S3 bucket for Auto-Vid assets and outputs"
     Value: !Ref AutoVidBucket
