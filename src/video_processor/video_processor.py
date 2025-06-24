@@ -257,6 +257,8 @@ class VideoProcessor:
         # Extract AWS Polly config
         voice_id = provider_config.voiceId
         engine = provider_config.engine
+        language_code = provider_config.languageCode
+        text_type = provider_config.textType
 
         # Generate TTS
         tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
@@ -265,6 +267,8 @@ class VideoProcessor:
             tts_path,
             voice_id,
             engine,
+            language_code,
+            text_type
         )
 
         # Create clip

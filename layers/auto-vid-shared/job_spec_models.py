@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Union, Literal, Dict, Any
 from enum import Enum
 
+from .polly_constants import LanguageCode, VoiceId
+
 
 class Metadata(BaseModel):
     projectId: Optional[str] = None
@@ -32,8 +34,10 @@ class BackgroundMusic(BaseModel):
 
 
 class ProviderConfig(BaseModel):
-    voiceId: str = "Joanna"
-    engine: str = "neural"
+    voiceId: VoiceId = "Joanna"
+    engine: Literal["standard", "neural", "long-form", "generative"] = "neural"
+    textType: Literal["text", "ssml"] = "text"
+    languageCode: Optional[LanguageCode] = None
 
 
 class TTSData(BaseModel):
@@ -87,9 +91,26 @@ class JobSpec(BaseModel):
     timeline: List[TimelineEvent]
     output: Output
 
+    @field_validator("backgroundMusic")
+    @classmethod
+    def validate_playlist_assets(cls, v, info):
+        if v and hasattr(info, "data") and "assets" in info.data:
+            audio_ids = {audio.id for audio in info.data["assets"].audio}
+            for playlist_id in v.playlist:
+                if playlist_id not in audio_ids:
+                    raise ValueError(
+                        f"Playlist item '{playlist_id}' not found in assets.audio"
+                    )
+        return v
+
     @field_validator("timeline")
     @classmethod
-    def validate_timeline_not_empty(cls, v):
-        if not v:
-            raise ValueError("Timeline cannot be empty")
+    def validate_audio_assets(cls, v, info):
+        if hasattr(info, "data") and "assets" in info.data:
+            audio_ids = {audio.id for audio in info.data["assets"].audio}
+            for event in v:
+                if event.type == "audio" and event.data.assetId not in audio_ids:
+                    raise ValueError(
+                        f"Audio asset '{event.data.assetId}' not found in assets.audio"
+                    )
         return v

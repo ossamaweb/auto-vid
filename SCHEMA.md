@@ -57,9 +57,11 @@ Defines a voiceover event.
 - `"data"` (Object):
   - `"text"` (String, Required): The text to be converted to speech.
   - `"provider"` (Literal["aws-polly"], Default: "aws-polly"): TTS provider to use.
-  - `"providerConfig"` (Object, Optional): Provider-specific configuration.
-    - `"voiceId"` (String, Default: "Joanna"): Voice ID for the TTS provider.
-    - `"engine"` (String, Default: "neural"): TTS engine type.
+  - `"providerConfig"` (Object, Optional): Provider-specific configuration. See [AWS Polly SynthesizeSpeech API](https://docs.aws.amazon.com/polly/latest/dg/API_SynthesizeSpeech.html) for complete reference.
+    - `"voiceId"` (String, Default: "Joanna"): Voice ID for the TTS provider. Must be one of AWS Polly's supported voices.
+    - `"engine"` (String, Default: "neural"): TTS engine type. Options: "standard", "neural", "long-form", "generative".
+    - `"languageCode"` (String, Optional): Language code for the voice (e.g., "en-US", "es-ES"). If not specified, uses the voice's default language.
+    - `"textType"` (String, Default: "text"): Text format type. Options: "text" or "ssml" for Speech Synthesis Markup Language support.
   - `"volume"` (Float, 0.0-1.0, Default: 1.0): The volume of this specific TTS clip.
   - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
   - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
@@ -135,7 +137,9 @@ Defines the properties of the final, rendered video file.
         "provider": "aws-polly",
         "providerConfig": {
           "voiceId": "Matthew",
-          "engine": "neural"
+          "engine": "neural",
+          "languageCode": "en-US",
+          "textType": "text"
         },
         "duckingLevel": 0.1,
         "duckingFadeDuration": 1.0
@@ -157,7 +161,9 @@ Defines the properties of the final, rendered video file.
         "provider": "aws-polly",
         "providerConfig": {
           "voiceId": "Matthew",
-          "engine": "neural"
+          "engine": "neural",
+          "languageCode": "en-US",
+          "textType": "text"
         },
         "duckingLevel": 0.1,
         "duckingFadeDuration": 1.0

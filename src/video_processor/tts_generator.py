@@ -20,7 +20,7 @@ class TTSGenerator:
             logger.error(f"Failed to initialize AWS Polly client: {str(e)}")
             raise
 
-    def generate_speech(self, text, output_path, voice_id="Joanna", engine="neural"):
+    def generate_speech(self, text, output_path, voice_id="Joanna", engine="neural", language_code=None, text_type="text"):
         """
         Generate speech from text using Amazon Polly and save as MP3
 
@@ -29,15 +29,27 @@ class TTSGenerator:
             output_path (str): Path where to save the MP3 file
             voice_id (str): The Polly voice ID to use (default: Joanna)
             engine (str): The engine type to use ('neural' or 'standard')
+            language_code (str): Optional language code
+            text_type (str): Text type ('text' or 'ssml')
 
         Returns:
             str: Path to the generated audio file
         """
         try:
+            # Build synthesis parameters
+            params = {
+                "Text": text,
+                "OutputFormat": "mp3",
+                "VoiceId": voice_id,
+                "Engine": engine,
+                "TextType": text_type
+            }
+            
+            if language_code:
+                params["LanguageCode"] = language_code
+            
             # Request speech synthesis
-            response = self.polly_client.synthesize_speech(
-                Text=text, OutputFormat="mp3", VoiceId=voice_id, Engine=engine
-            )
+            response = self.polly_client.synthesize_speech(**params)
 
             # Save the audio stream to file
             if "AudioStream" in response:
