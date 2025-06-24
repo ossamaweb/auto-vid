@@ -4,11 +4,12 @@ This document outlines the schema for the "Video Job Specification" JSON file. T
 
 ### Top-Level Structure
 
-The JSON object has four main keys:
+The JSON object has five main keys:
 
 - `metadata`: Information _about_ the project for tracking and organization.
 - `assets`: A library of all media files (video, audio) to be used.
-- `timeline`: The heart of the specification; a chronological sequence of events that happen _on_ the video.
+- `backgroundMusic`: Configuration for continuous background audio throughout the video.
+- `timeline`: A chronological sequence of timed events that happen _on_ the video.
 - `output`: Specifications for the final rendered file.
 
 ---
@@ -20,7 +21,7 @@ The JSON object has four main keys:
 Contains general information about the video job.
 
 - `"projectId"` (String, Optional): A unique identifier for the job or project.
-- `"title"` (String, Recommended): The human-readable title of the video.
+- `"title"` (String, Optional): The human-readable title of the video.
 - `"tags"` (Array of Strings, Optional): A list of tags for searching and categorization.
 
 #### 2. `assets` (Object, Required)
@@ -34,54 +35,58 @@ A manifest of all source media. The `id` of each asset is used to reference it l
   - `"id"` (String): A unique ID for this audio asset (e.g., `"bgm_main"`, `"sfx_cheer"`).
   - `"source"` (String): The URI of the audio file.
 
-#### 3. `timeline` (Array of Objects, Required)
+#### 3. `backgroundMusic` (Object, Optional)
 
-Defines all the creative events that occur during the video. The engine processes this array in order. Each object is an "event" with a `type`.
+Defines the continuous background audio track that plays throughout the entire video.
 
-##### Event Type: `backgroundMusic`
+- `"playlist"` (Array of Strings, Required): An ordered list of audio asset IDs from the `assets` section to be played in sequence.
+- `"loop"` (Boolean, Default: true): If `true`, the entire playlist will repeat if the video is longer than the playlist's combined duration.
+- `"volume"` (Float, 0.0-1.0, Default: 0.3): The base volume for the background music.
+- `"crossfadeDuration"` (Float, Default: 2.0, ≥0.0): The time in seconds to crossfade between tracks in the playlist.
 
-Defines the continuous background audio track. There should only be one event of this type.
+#### 4. `timeline` (Array of Objects, Required, Non-empty)
 
-- `"type": "backgroundMusic"`
-- `"details"` (Object):
-  - `"playlist"` (Array of Strings): An ordered list of audio asset IDs from the `assets` section to be played in sequence.
-  - `"loop"` (Boolean): If `true`, the entire playlist will repeat if the video is longer than the playlist's combined duration.
-  - `"volume"` (Float, 0.0-1.0): The base volume for the background music.
-  - `"crossfadeDuration"` (Float, Optional): The time in seconds to crossfade between tracks in the playlist.
-  - `"duckingFadeDuration"` (Float, Optional): The time in seconds it takes for the music to fade down before a ducking event and fade back up after.
+Defines all the timed creative events that occur during the video. The engine processes this array in chronological order. Each object is an "event" with a `type` and `start` time. Timeline cannot be empty.
 
 ##### Event Type: `tts` (Text-to-Speech)
 
 Defines a voiceover event.
 
-- `"start"` (Float): The time in seconds when the voiceover should begin.
+- `"start"` (Float, ≥0.0): The time in seconds when the voiceover should begin.
 - `"type": "tts"`
-- `"details"` (Object):
-  - `"text"` (String): The text to be converted to speech.
-  - `"voiceId"` (String): The AWS Polly voice ID to use (e.g., `"Matthew"`, `"Joanna"`).
-  - `"triggersDucking"` (Boolean, Optional, Default: `true`): If `false`, this TTS clip will _not_ cause the background music to duck.
-  - `"duckingLevel"` (Float, 0.0-1.0, Optional): The volume level the background music should duck to during this clip. Overrides the global setting.
-  - `"volume"` (Float, 0.0-1.0, Optional): The volume of this specific TTS clip.
-  - `"fadeInDuration"` (Float, Optional): Time in seconds for this clip to fade in.
-  - `"fadeOutDuration"` (Float, Optional): Time in seconds for this clip to fade out.
+- `"data"` (Object):
+  - `"text"` (String, Required): The text to be converted to speech.
+  - `"provider"` (Literal["aws-polly"], Default: "aws-polly"): TTS provider to use.
+  - `"providerConfig"` (Object, Optional): Provider-specific configuration.
+    - `"voiceId"` (String, Default: "Joanna"): Voice ID for the TTS provider.
+    - `"engine"` (String, Default: "neural"): TTS engine type.
+  - `"volume"` (Float, 0.0-1.0, Default: 1.0): The volume of this specific TTS clip.
+  - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
 
 ##### Event Type: `audio`
 
 Defines a sound effect or other pre-recorded audio clip event.
 
-- `"start"` (Float): The time in seconds when the audio should begin.
+- `"start"` (Float, ≥0.0): The time in seconds when the audio should begin.
 - `"type": "audio"`
-- `"details"` (Object):
-  - `"assetId"` (String): The ID of the audio asset to play from the `assets` section.
-  - All other properties are the same as `tts` (`triggersDucking`, `duckingLevel`, `volume`, etc.).
+- `"data"` (Object):
+  - `"assetId"` (String, Required): The ID of the audio asset to play from the `assets` section.
+  - `"volume"` (Float, 0.0-1.0, Default: 0.5): The volume of this specific audio clip.
+  - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
 
-#### 4. `output` (Object, Required)
+#### 5. `output` (Object, Required)
 
 Defines the properties of the final, rendered video file.
 
-- `"destination"` (String): The URI of the destination folder (e.g., `s3://my-bucket/outputs/`).
-- `"filename"` (String): The name of the final output file (e.g., `"final-video.mp4"`).
-- `"format"` (String): The container format (e.g., `"mp4"`).
+- `"destination"` (String, Required): The URI of the destination folder (e.g., `s3://my-bucket/outputs/`).
+- `"filename"` (String, Required): The name of the final output file (e.g., `"final-video.mp4"`).
+- `"encoding"` (Object, Optional): MP4 video encoding parameters (uses defaults if not specified).
+  - `"preset"` (String, Default: "medium"): FFmpeg preset for encoding speed vs quality tradeoff.
+  - `"bitrate"` (String, Optional): Video bitrate (e.g., "2500k", "5M").
+  - `"audio_bitrate"` (String, Optional): Audio bitrate (e.g., "128k", "320k").
+  - `"fps"` (Float, Optional): Output frame rate.
 
 ---
 
@@ -91,14 +96,14 @@ Defines the properties of the final, rendered video file.
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
   "metadata": {
-    "projectId": "proj_tyler_perry_101",
-    "title": "Tyler Perry Paychecks - Hits and Flops",
-    "tags": ["tyler perry", "finance", "movies", "box office"]
+    "projectId": "project_name",
+    "title": "My Automated Video v1",
+    "tags": ["automated"]
   },
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "s3://my-hackathon-bucket-inputs/tyler-perry-raw.mp4"
+      "source": "s3://my-hackathon-bucket-inputs/input.mp4"
     },
     "audio": [
       {
@@ -115,58 +120,67 @@ Defines the properties of the final, rendered video file.
       }
     ]
   },
+  "backgroundMusic": {
+    "playlist": ["bgm_cinematic"],
+    "loop": true,
+    "volume": 0.3,
+    "crossfadeDuration": 2.0
+  },
   "timeline": [
-    {
-      "type": "backgroundMusic",
-      "details": {
-        "playlist": ["bgm_cinematic"],
-        "loop": true,
-        "volume": 0.3,
-        "duckingFadeDuration": 0.5
-      }
-    },
     {
       "start": 0,
       "type": "tts",
-      "details": {
+      "data": {
         "text": "What if I told you Tyler Perry isn't just a filmmaker, but a financial titan whose career earnings will absolutely shock you?",
-        "voiceId": "Matthew",
-        "duckingLevel": 0.1
+        "provider": "aws-polly",
+        "providerConfig": {
+          "voiceId": "Matthew",
+          "engine": "neural"
+        },
+        "duckingLevel": 0.1,
+        "duckingFadeDuration": 1.0
       }
     },
     {
       "start": 48.5,
       "type": "audio",
-      "details": {
+      "data": {
         "assetId": "sfx_swoosh",
-        "volume": 0.8,
-        "triggersDucking": false
+        "volume": 0.8
       }
     },
     {
       "start": 49,
       "type": "tts",
-      "details": {
+      "data": {
         "text": "Tyler Perry made a bold move on Diary of a Mad Black Woman, funding half the $5.5 million budget himself!",
-        "voiceId": "Matthew",
-        "duckingLevel": 0.1
+        "provider": "aws-polly",
+        "providerConfig": {
+          "voiceId": "Matthew",
+          "engine": "neural"
+        },
+        "duckingLevel": 0.1,
+        "duckingFadeDuration": 1.0
       }
     },
     {
       "start": 73,
       "type": "audio",
-      "details": {
+      "data": {
         "assetId": "sfx_cheer",
         "volume": 0.9,
         "duckingLevel": 0.4,
-        "fadeOutDuration": 1.5
+        "duckingFadeDuration": 0.5
       }
     }
   ],
   "output": {
     "destination": "s3://my-hackathon-bucket-outputs/",
     "filename": "tyler-perry-final-v2.mp4",
-    "format": "mp4"
+    "encoding": {
+      "preset": "fast",
+      "bitrate": "2500k"
+    }
   }
 }
 ```

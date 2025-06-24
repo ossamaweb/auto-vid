@@ -72,6 +72,7 @@ Desktop.ini
 dist/
 temp/
 tmp/
+.private/
 *.mp4
 *.mp3
 *.wav

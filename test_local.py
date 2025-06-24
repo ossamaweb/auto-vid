@@ -2,28 +2,43 @@
 import json
 import sys
 import os
+import uuid
+import logging
 from dotenv import load_dotenv
 
-# Load environment variables for local testing
-load_dotenv()
 
 # Add src to path for imports
 sys.path.append("src/video_processor")
+sys.path.append("src/shared")
 from video_processor import VideoProcessor
+from job_validator import validate_job_spec
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
+# Load environment variables for local testing
+load_dotenv()
 
 
 def test_video_processing():
     """Test video processor locally with sample job spec"""
 
+    job_id = str(uuid.uuid4())
+
     # Load sample job spec
-    with open("sample_input/advanced_job_spec.json", "r") as f:
-        job_spec = json.load(f)
+    with open("sample_input/long_job_spec.json", "r") as f:
+        job_spec_dict = json.load(f)
 
     try:
+        # Validate job spec
+        job_spec = validate_job_spec(job_spec_dict)
+
         # Use local tmp directory in repo
         processor = VideoProcessor(temp_dir="./tmp")
-        result_url = processor.process_video_job(job_spec)
-        print(f"✅ Video processing completed successfully!")
+        result_url = processor.process_video_job(job_id, job_spec)
+        print("✅ Video processing completed successfully!")
         print(f"📁 Result URL: {result_url}")
 
     except Exception as e:

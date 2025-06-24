@@ -4,3 +4,4 @@ numpy>=1.21.0
 requests==2.31.0
 python-dotenv==1.0.0
 imageio[ffmpeg]
+pydantic==2.11.7
