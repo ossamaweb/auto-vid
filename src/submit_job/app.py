@@ -3,12 +3,9 @@ import uuid
 import boto3
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
-# Add shared directory to path
-shared_path = os.path.join(os.path.dirname(__file__), "..", "shared")
-sys.path.insert(0, os.path.abspath(shared_path))
-from job_validator import validate_job_spec  # noqa: E402
+from job_validator import validate_job_spec
 
 
 def lambda_handler(event, context):
@@ -34,7 +31,7 @@ def lambda_handler(event, context):
         message = {
             "jobId": job_id,
             "jobSpec": job_spec_dict,
-            "submittedAt": datetime.utcnow().isoformat(),
+            "submittedAt": datetime.now(timezone.utc).isoformat(),
         }
 
         sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps(message))

@@ -5,9 +5,14 @@ import os
 from botocore.exceptions import ClientError
 from .video_processor import VideoProcessor
 
-# Add shared directory to path
-shared_path = os.path.join(os.path.dirname(__file__), "..", "shared")
-sys.path.insert(0, os.path.abspath(shared_path))
+import sys
+import os
+
+# Add layers path for local development and Docker
+layers_path = os.path.join(
+    os.path.dirname(__file__), "..", "..", "layers", "auto-vid-shared"
+)
+sys.path.insert(0, os.path.abspath(layers_path))
 from job_validator import validate_job_spec  # noqa: E402
 
 logger = logging.getLogger(__name__)

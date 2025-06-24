@@ -43,10 +43,10 @@ cp .env.example .env
 
 ```bash
 # Test full video processing pipeline
-python test_local.py
+python3 test_local.py
 
 # Test TTS generation only
-python test_tts_local.py
+python3 test_tts_local.py
 ```
 
 ### Serverless Deployment
@@ -100,10 +100,10 @@ See `SCHEMA.md` for complete documentation and `sample_input/long_job_spec.json`
 
 ```bash
 # Test with sample job spec
-python test_local.py
+python3 test_local.py
 
 # Test TTS generation
-python test_tts_local.py
+python3 test_tts_local.py
 
 # Test individual Lambda functions
 sam local invoke SubmitJobFunction -e events/event-submit-job.json

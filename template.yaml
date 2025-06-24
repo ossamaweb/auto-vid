@@ -9,11 +9,23 @@ Globals:
     Runtime: python3.12
 
 Resources:
+  AutoVidSharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: auto-vid-shared
+      ContentUri: layers/auto-vid-shared/
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
+
   SubmitJobFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/submit_job/
       Handler: app.lambda_handler
+      Layers:
+        - !Ref AutoVidSharedLayer
       Events:
         SubmitJob:
           Type: Api
@@ -26,8 +38,8 @@ Resources:
     Properties:
       # PackageType: Image
       # ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/auto-vid-processor:latest"
-      CodeUri: src/video_processor/
-      Handler: app.lambda_handler
+      CodeUri: src/
+      Handler: video_processor.app.lambda_handler
       Timeout: 900
       MemorySize: 3008
       EphemeralStorage:
@@ -46,6 +58,8 @@ Resources:
     Properties:
       CodeUri: src/get_status/
       Handler: app.lambda_handler
+      Layers:
+        - !Ref AutoVidSharedLayer
       Events:
         GetStatus:
           Type: Api
