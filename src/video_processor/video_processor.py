@@ -7,8 +7,8 @@ from tts_generator import TTSGenerator
 
 logger = logging.getLogger(__name__)
 
-# Default temp directory
-DEFAULT_TEMP_DIR = "./tmp"
+# Default temp directory (use Lambda's writable /tmp)
+DEFAULT_TEMP_DIR = "/tmp"
 
 
 class VideoProcessor:

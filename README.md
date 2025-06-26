@@ -38,30 +38,36 @@ A production-ready serverless video processing application that automatically ge
 - SAM CLI installed
 - Python 3.12+
 
-### Deploy to AWS
+### ⚠️ Cost Warning
 
-#### Option 1: Automated Deployment (Recommended)
+**This application will incur AWS charges** when deployed and used. Costs include:
+
+- **Lambda execution** - Video processing (up to 15 minutes per job)
+- **S3 storage** - Input assets and output videos
+- **ECR storage** - Container image (~360MB)
+- **API Gateway** - API requests
+- **SQS** - Message processing
+- **Polly** - Text-to-speech generation
+
+Monitor your AWS billing dashboard and set up billing alerts. See the [Cleanup](#-cleanup) section to delete resources when done.
+
+### Deploy to AWS
 
 ```bash
 # Clone repository
 git clone <repository-url>
 cd auto-vid
 
-# One-command deployment
-./deploy.sh <stack-name> <aws-region>
-```
-
-#### Option 2: Manual Deployment
-
-```bash
-# Step-by-step deployment for customization
-
-# 1. Build and deploy (SAM handles container automatically)
+# Build and deploy
 sam build
 sam deploy --guided
 
 # Answer 'Y' when asked: "Create managed ECR repositories for all functions?"
 # SAM will build, push container, and deploy everything automatically
+
+# For subsequent deployments (settings saved in samconfig.toml)
+sam build
+sam deploy
 ```
 
 ### Submit Your First Job
@@ -192,20 +198,21 @@ sam local invoke videoprocessorfunction -e events/event-process-job.json --env-v
 docker run -it --entrypoint /bin/bash videoprocessorfunction:latest
 ```
 
-### Understanding the Deploy Script
+### SAM Deployment Process
 
-The `deploy.sh` script simplifies deployment by leveraging SAM's managed ECR repositories:
+SAM handles the entire deployment automatically:
 
-1. **Container Build** - `sam build` creates optimized Docker image (~400-600MB)
+1. **Container Build** - `sam build` creates optimized Docker image (~360MB)
 2. **Infrastructure Deployment** - `sam deploy` creates all AWS resources
 3. **Automatic ECR Management** - SAM creates repository, pushes image, updates Lambda
-4. **Status Report** - Displays API URLs and resource names for testing
+4. **Configuration Persistence** - Settings saved in `samconfig.toml` for future deployments
 
-**Key optimizations:**
-- **Multi-stage Docker build** - Reduces image size by 60-70%
+**Key features:**
+
+- **Multi-stage Docker build** - Optimized container size
 - **Managed ECR repositories** - No manual Docker/ECR commands needed
-- **Automatic container deployment** - SAM handles the entire container lifecycle
-- **Environment variable support** - Easy local testing with env files
+- **Guided deployment** - Interactive prompts for first-time setup
+- **One-command updates** - Simple `sam deploy` for subsequent deployments
 
 ### Project Structure
 
@@ -252,12 +259,24 @@ All AWS resources use consistent naming:
 
 ### Lambda Configuration
 
-- **Memory**: 3008 MB for video processing
-- **Timeout**: 15 minutes maximum
-- **Storage**: 10 GB ephemeral storage
-- **Container Size**: ~400-600MB (optimized multi-stage build)
-- **Cold Start**: 5-10 seconds (optimized from 15-30 seconds)
-- **Concurrency**: Configurable based on workload
+**API Functions (Submit/Status):**
+
+- **Memory**: 256-512 MB (lightweight JSON processing)
+- **Timeout**: 30-60 seconds (fast API responses)
+- **Storage**: Default 512 MB (no file processing needed)
+
+**Video Processor:**
+
+- **Memory**: 10,240 MB (maximum available for intensive processing)
+- **Timeout**: 15 minutes (maximum allowed)
+- **Storage**: 10 GB ephemeral storage (large video files)
+- **Container Size**: ~360MB (optimized multi-stage build)
+
+**Benefits:**
+
+- **Cost Optimized** - API functions use minimal resources
+- **Performance Optimized** - Video processor uses maximum resources
+- **Right-sized** - Each function configured for its specific workload
 
 ### Supported Formats
 
@@ -275,3 +294,49 @@ All AWS resources use consistent naming:
 - **✅ Cost Optimization** - Pay-per-use serverless architecture
 
 Built for the **AWS Lambda Hackathon** - demonstrating enterprise-grade serverless video processing! 🚀
+
+## 🧹 Cleanup
+
+### Delete AWS Stack
+
+**To avoid ongoing charges, delete the stack when done:**
+
+```bash
+# Delete the entire stack and all resources
+aws cloudformation delete-stack --stack-name <your-stack-name>
+
+# Wait for deletion to complete
+aws cloudformation wait stack-delete-complete --stack-name <your-stack-name>
+
+# Verify deletion
+aws cloudformation describe-stacks --stack-name <your-stack-name>
+# Should return: "Stack with id <stack-name> does not exist"
+```
+
+**What gets deleted:**
+
+- Lambda functions
+- S3 bucket (and all contents)
+- ECR repository (and container images)
+- SQS queue
+- API Gateway
+- IAM roles and policies
+
+**⚠️ Warning**: This permanently deletes all your videos and data. Download any important outputs before deletion.
+
+### Manual Cleanup (if needed)
+
+```bash
+# If stack deletion fails, manually delete resources:
+
+# Empty S3 bucket first
+aws s3 rm s3://auto-vid-<stack-name>-<account-id> --recursive
+
+# Delete ECR images
+aws ecr batch-delete-image \
+  --repository-name <repository-name> \
+  --image-ids imageTag=latest
+
+# Then retry stack deletion
+aws cloudformation delete-stack --stack-name <your-stack-name>
+```
