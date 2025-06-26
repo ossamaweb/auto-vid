@@ -7,8 +7,8 @@ from tts_generator import TTSGenerator
 
 logger = logging.getLogger(__name__)
 
-# Default temp directory
-DEFAULT_TEMP_DIR = "./tmp"
+# Default temp directory (use Lambda's writable /tmp)
+DEFAULT_TEMP_DIR = "/tmp"
 
 
 class VideoProcessor:
@@ -131,8 +131,19 @@ class VideoProcessor:
 
             # Phase 8: Upload result
             logger.info("Uploading result...")
+            destination = job_spec.output.destination
+            if not destination:
+                # Use default managed bucket
+                bucket_name = os.environ.get("AUTO_VID_BUCKET")
+                if bucket_name:
+                    destination = f"s3://{bucket_name}/outputs/"
+                else:
+                    raise ValueError(
+                        "No output destination specified and no default bucket available"
+                    )
+
             result_url = self.asset_manager.upload_result(
-                local_output, job_spec.output.destination, output_filename
+                local_output, destination, output_filename
             )
 
             # Cleanup
@@ -257,14 +268,13 @@ class VideoProcessor:
         # Extract AWS Polly config
         voice_id = provider_config.voiceId
         engine = provider_config.engine
+        language_code = provider_config.languageCode
+        text_type = provider_config.textType
 
         # Generate TTS
         tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
         self.tts_generator.generate_speech(
-            data.text,
-            tts_path,
-            voice_id,
-            engine,
+            data.text, tts_path, voice_id, engine, language_code, text_type
         )
 
         # Create clip

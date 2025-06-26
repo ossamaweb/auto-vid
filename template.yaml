@@ -2,18 +2,42 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Auto-Vid Serverless Video Processing Application
 
-Globals:
-  Function:
-    Timeout: 900
-    MemorySize: 3008
-    Runtime: python3.12
-
 Resources:
+  AutoVidBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "auto-vid-${AWS::StackName}-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  AutoVidSharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "auto-vid-shared-${AWS::StackName}-${AWS::AccountId}"
+      ContentUri: layers/auto-vid-shared/
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
+
   SubmitJobFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/submit_job/
       Handler: app.lambda_handler
+      Runtime: python3.12
+      MemorySize: 512
+      Timeout: 60
+      Layers:
+        - !Ref AutoVidSharedLayer
+      Environment:
+        Variables:
+          AUTO_VID_BUCKET: !Ref AutoVidBucket
       Events:
         SubmitJob:
           Type: Api
@@ -21,31 +45,44 @@ Resources:
             Path: /submit
             Method: post
 
-  VideoProcessorFunction:
+  videoprocessorfunction:
     Type: AWS::Serverless::Function
     Properties:
-      # PackageType: Image
-      # ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/auto-vid-processor:latest"
-      CodeUri: src/video_processor/
-      Handler: app.lambda_handler
+      PackageType: Image
       Timeout: 900
-      MemorySize: 3008
+      MemorySize: 10240
       EphemeralStorage:
         Size: 10240
+      Environment:
+        Variables:
+          AUTO_VID_BUCKET: !Ref AutoVidBucket
       Policies:
         - AmazonPollyFullAccess
-        - AmazonS3FullAccess
+        - S3CrudPolicy:
+            BucketName: !Ref AutoVidBucket
       Events:
         ProcessJob:
           Type: SQS
           Properties:
             Queue: !GetAtt JobQueue.Arn
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
 
   GetStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/get_status/
       Handler: app.lambda_handler
+      Runtime: python3.12
+      MemorySize: 256
+      Timeout: 30
+      Layers:
+        - !Ref AutoVidSharedLayer
+      Environment:
+        Variables:
+          AUTO_VID_BUCKET: !Ref AutoVidBucket
       Events:
         GetStatus:
           Type: Api
@@ -56,9 +93,20 @@ Resources:
   JobQueue:
     Type: AWS::SQS::Queue
     Properties:
-      VisibilityTimeoutSeconds: 960
+      QueueName: !Sub "auto-vid-jobs-${AWS::StackName}-${AWS::AccountId}"
+      VisibilityTimeout: 960
 
 Outputs:
   SubmitJobApi:
     Description: "API Gateway endpoint URL for Submit Job function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/submit/"
+
+  GetStatusApi:
+    Description: "API Gateway endpoint URL for Get Status function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/status/"
+
+  AutoVidBucket:
+    Description: "S3 bucket for Auto-Vid assets and outputs"
+    Value: !Ref AutoVidBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-AutoVidBucket"

@@ -28,7 +28,7 @@ def format_validation_errors(e: ValidationError) -> str:
     for error in e.errors():
         field_path = " -> ".join(str(loc) for loc in error["loc"])
         error_msg = error["msg"]
-        input_val = error.get("input", "N/A")
-        error_messages.append(f"Field '{field_path}': {error_msg} (got: {input_val})")
+        # input_val = error.get("input", "N/A")
+        error_messages.append(f"Field '{field_path}': {error_msg}")
 
     return "\n  - " + "\n  - ".join(error_messages)
