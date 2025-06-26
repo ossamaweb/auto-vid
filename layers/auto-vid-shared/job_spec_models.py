@@ -1,8 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Union, Literal, Dict, Any
 from enum import Enum
-
-from .polly_constants import LanguageCode, VoiceId
+from polly_constants import LanguageCode, VoiceId
 
 
 class Metadata(BaseModel):

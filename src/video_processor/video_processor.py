@@ -1,8 +1,8 @@
 import os
 import logging
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
-from .asset_manager import AssetManager
-from .tts_generator import TTSGenerator
+from asset_manager import AssetManager
+from tts_generator import TTSGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -134,12 +134,14 @@ class VideoProcessor:
             destination = job_spec.output.destination
             if not destination:
                 # Use default managed bucket
-                bucket_name = os.environ.get('AUTO_VID_BUCKET')
+                bucket_name = os.environ.get("AUTO_VID_BUCKET")
                 if bucket_name:
                     destination = f"s3://{bucket_name}/outputs/"
                 else:
-                    raise ValueError("No output destination specified and no default bucket available")
-            
+                    raise ValueError(
+                        "No output destination specified and no default bucket available"
+                    )
+
             result_url = self.asset_manager.upload_result(
                 local_output, destination, output_filename
             )
@@ -272,12 +274,7 @@ class VideoProcessor:
         # Generate TTS
         tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
         self.tts_generator.generate_speech(
-            data.text,
-            tts_path,
-            voice_id,
-            engine,
-            language_code,
-            text_type
+            data.text, tts_path, voice_id, engine, language_code, text_type
         )
 
         # Create clip

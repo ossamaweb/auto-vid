@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 from botocore.exceptions import ClientError
-from .video_processor import VideoProcessor
+from video_processor import VideoProcessor
 
 import sys
 import os
@@ -43,7 +43,9 @@ def is_transient_error(error):
 
 
 def lambda_handler(event, context):
-    failed_jobs = []
+    transient_failures = []
+    permanent_failures = []
+    successful_jobs = []
 
     # Parse SQS message
     for record in event["Records"]:
@@ -60,22 +62,35 @@ def lambda_handler(event, context):
             result_url = processor.process_video_job(job_id, job_spec)
 
             logger.info(f"Job {job_id} completed successfully. Result: {result_url}")
+            successful_jobs.append(job_id)
 
         except ValueError as e:
             # Permanent error (validation failure) - don't retry
             logger.error(f"Job {job_id} permanently failed (validation): {str(e)}")
+            permanent_failures.append(job_id)
 
         except Exception as e:
             # Check if error is transient
             if is_transient_error(e):
                 logger.warning(f"Job {job_id} failed with transient error: {str(e)}")
-                failed_jobs.append(job_id)
+                transient_failures.append(job_id)
             else:
                 # Permanent error - don't retry
                 logger.error(f"Job {job_id} permanently failed: {str(e)}")
+                permanent_failures.append(job_id)
 
     # If any jobs had transient failures, raise exception to trigger SQS retry
-    if failed_jobs:
-        raise Exception(f"Transient failures for jobs: {', '.join(failed_jobs)}")
+    if transient_failures:
+        raise Exception(f"Transient failures for jobs: {', '.join(transient_failures)}")
 
-    return {"statusCode": 200, "body": "Jobs processed successfully"}
+    # Return appropriate status based on results
+    if permanent_failures:
+        return {
+            "statusCode": 400,
+            "body": f"Permanent failures: {', '.join(permanent_failures)}. Successful: {', '.join(successful_jobs)}"
+        }
+    
+    return {
+        "statusCode": 200, 
+        "body": f"All jobs processed successfully: {', '.join(successful_jobs)}"
+    }

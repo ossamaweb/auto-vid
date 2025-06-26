@@ -6,7 +6,6 @@ Globals:
   Function:
     Timeout: 900
     MemorySize: 3008
-    Runtime: python3.12
 
 Resources:
   AutoVidBucket:
@@ -36,6 +35,7 @@ Resources:
     Properties:
       CodeUri: src/submit_job/
       Handler: app.lambda_handler
+      Runtime: python3.12
       Layers:
         - !Ref AutoVidSharedLayer
       Environment:
@@ -48,13 +48,10 @@ Resources:
             Path: /submit
             Method: post
 
-  VideoProcessorFunction:
+  videoprocessorfunction:
     Type: AWS::Serverless::Function
     Properties:
-      # PackageType: Image
-      # ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/auto-vid-processor:latest"
-      CodeUri: src/
-      Handler: video_processor.app.lambda_handler
+      PackageType: Image
       Timeout: 900
       MemorySize: 3008
       EphemeralStorage:
@@ -71,12 +68,17 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt JobQueue.Arn
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
 
   GetStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/get_status/
       Handler: app.lambda_handler
+      Runtime: python3.12
       Layers:
         - !Ref AutoVidSharedLayer
       Environment:
