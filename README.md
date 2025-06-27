@@ -61,9 +61,24 @@ Monitor your AWS billing dashboard and set up billing alerts. See the [Cleanup](
 
 ### Prerequisites
 
-- AWS CLI configured with appropriate permissions
-- SAM CLI installed
-- Python 3.12+
+- **AWS CLI** configured with appropriate permissions
+- **SAM CLI** installed  
+- **Python 3.12+**
+
+#### AWS Permissions for Local Testing
+
+Your AWS credentials need:
+- `AmazonPollyFullAccess` (for TTS generation)
+- `AmazonS3FullAccess` (for asset download/upload)
+- Or `PowerUserAccess` for comprehensive access
+
+For deployment permissions, see [SAM Prerequisites](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/prerequisites.html).
+
+```bash
+# Verify your setup
+aws sts get-caller-identity
+aws polly describe-voices --region us-east-1
+```
 
 ### Deploy to AWS
 
@@ -210,45 +225,103 @@ Auto-Vid directly addresses several major pain points in modern content creation
 
 ## 🛠️ Development
 
-### Local Testing
+### Local Development Setup
+
+#### For Python Script Testing
 
 ```bash
 # Install dependencies
 python3 -m pip install -r requirements.txt
 
-# Test AWS Polly locally (requires AWS credentials)
-python3 test_tts_local.py
+# Copy environment template and add your AWS credentials
+cp .env.example .env
+# Edit .env with your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, etc.
 
-# Test locally (requires AWS credentials)
+# Test AWS Polly locally
+python3 test_tts_local.py english  # or spanish, french, arabic, all
+
+# Test video processing locally
 python3 test_local.py
-
-# Test individual components
-sam local invoke SubmitJobFunction -e events/submit-job.json
 ```
 
-### Container Development
+#### For Container Testing
+
+**Option 1: Use Local Output (Recommended for testing)**
 
 ```bash
-# Build container with SAM (recommended)
+# Create output directory
+mkdir -p ./output
+
+# Modify your event file to use local destination:
+# "output": {"destination": "./output", "filename": "test-video.mp4"}
+
+# Run with volume mount
+sam local invoke videoprocessorfunction -e events/event-process-job.json \
+  --docker-volume-basedir $(pwd)
+
+# Check output
+ls -la ./output/
+```
+
+**Option 2: Use S3 Output (Requires deployed resources)**
+
+```bash
+# Create env.json with actual AWS resources
+cat > env.json << EOF
+{
+  "videoprocessorfunction": {
+    "AWS_ACCESS_KEY_ID": "your-access-key",
+    "AWS_SECRET_ACCESS_KEY": "your-secret-key",
+    "AWS_DEFAULT_REGION": "us-east-1",
+    "AUTO_VID_BUCKET": "auto-vid-your-stack-name-your-account-id"
+  }
+}
+EOF
+
+# Find your actual bucket name (after deployment)
+aws s3 ls | grep auto-vid
+# OR
+aws cloudformation describe-stacks --stack-name your-stack-name \
+  --query 'Stacks[0].Outputs[?OutputKey==`AutoVidBucket`].OutputValue' --output text
+
+# Run with environment variables
+sam local invoke videoprocessorfunction -e events/event-process-job.json \
+  --env-vars env.json
+```
+
+### Troubleshooting Local Development
+
+**CloudFormation References Don't Work Locally**
+- `AUTO_VID_BUCKET: !Ref AutoVidBucket` becomes literal `"AutoVidBucket"` in local testing
+- Use actual bucket names in `env.json` for S3 testing
+- Or use local destinations for simpler testing
+
+**Missing AWS Credentials**
+- Ensure `.env` file has valid AWS credentials for Python scripts
+- Ensure `env.json` has valid credentials for container testing
+- Test with: `aws sts get-caller-identity`
+
+**Import Errors**
+- Run from project root directory
+- Ensure all `__init__.py` files are present
+- Check Python path with `python3 -c "import sys; print(sys.path)"`
+
+### Advanced Container Development
+
+```bash
+# Build container with SAM
 sam build
-
-# Test container locally with SAM
-sam local invoke videoprocessorfunction -e events/event-process-job.json
-
-# Test with environment variables
-# Create env.json:
-# {
-#   "videoprocessorfunction": {
-#     "AWS_ACCESS_KEY_ID": "your-key",
-#     "AWS_SECRET_ACCESS_KEY": "your-secret",
-#     "AWS_DEFAULT_REGION": "us-east-1",
-#     "AUTO_VID_BUCKET": "your-bucket"
-#   }
-# }
-sam local invoke videoprocessorfunction -e events/event-process-job.json --env-vars env.json
 
 # Debug container interactively
 docker run -it --entrypoint /bin/bash videoprocessorfunction:latest
+
+# Inside container, explore the environment
+ls -la /var/task/
+echo $AUTO_VID_BUCKET
+python3 -c "import video_processor; print('Import successful')"
+
+# Clean up dangling images
+docker image prune -f
 ```
 
 ### SAM Deployment Process
