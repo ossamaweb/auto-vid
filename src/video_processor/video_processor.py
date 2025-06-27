@@ -97,7 +97,13 @@ class VideoProcessor:
             logger.info("Combining audio layers...")
             all_audio = [background_music] if background_music else []
             all_audio.extend(audio_clips)
-            final_audio = CompositeAudioClip(all_audio)
+            
+            if not all_audio:
+                # No audio clips at all - create silent audio matching video duration
+                from moviepy import AudioClip
+                final_audio = AudioClip(lambda t: [0, 0], duration=video_duration)
+            else:
+                final_audio = CompositeAudioClip(all_audio)
 
             # Trim clip if needed
             if video_duration < final_audio.duration:
