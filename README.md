@@ -1,6 +1,20 @@
 # Auto-Vid: Serverless Video Processing Platform
 
-A production-ready serverless video processing application that automatically generates videos with AI-powered text-to-speech, background music, and sound effects using declarative JSON job specifications.
+A production-ready serverless video enrichment pipeline that uses a declarative JSON format to automatically add AI-powered TTS, music, and sound effects to video.
+
+## 📑 Table of Contents
+
+- [Key Features](#-key-features)
+- [Architecture](#️-architecture)
+- [Quick Start](#-quick-start)
+- [Job Specification](#-job-specification)
+- [Business Problems Solved](#-business-problems-solved)
+- [Use Cases](#-use-cases)
+- [Development](#️-development)
+- [Configuration](#-configuration)
+- [Performance & Limits](#-performance--limits)
+- [Production Ready](#-production-ready)
+- [Cleanup](#-cleanup)
 
 ## ✨ Key Features
 
@@ -32,12 +46,6 @@ A production-ready serverless video processing application that automatically ge
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- AWS CLI configured with appropriate permissions
-- SAM CLI installed
-- Python 3.12+
-
 ### ⚠️ Cost Warning
 
 **This application will incur AWS charges** when deployed and used. Costs include:
@@ -51,11 +59,17 @@ A production-ready serverless video processing application that automatically ge
 
 Monitor your AWS billing dashboard and set up billing alerts. See the [Cleanup](#-cleanup) section to delete resources when done.
 
+### Prerequisites
+
+- AWS CLI configured with appropriate permissions
+- SAM CLI installed
+- Python 3.12+
+
 ### Deploy to AWS
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/ossamaweb/auto-vid.git
 cd auto-vid
 
 # Build and deploy
@@ -138,25 +152,61 @@ Auto-Vid uses a declarative JSON format for video generation:
 
 See [SCHEMA.md](SCHEMA.md) for complete documentation.
 
+## 💼 Business Problems Solved
+
+Auto-Vid directly addresses several major pain points in modern content creation:
+
+1. **High Cost and Complexity of Video Production** - Eliminates the need for expensive video editing software (like Adobe Premiere Pro or Final Cut Pro) and the specialized skills required to use them for common, repetitive tasks.
+
+2. **Slow Content Turnaround Times** - Replaces a manual, multi-hour editing process with an automated workflow that can generate a finished video in minutes. This drastically increases content velocity.
+
+3. **Lack of Scalability** - A human editor can only work on one video at a time. This serverless architecture can process dozens or hundreds of videos in parallel, allowing businesses to scale their video output without a linear increase in cost or personnel.
+
+4. **Inconsistent Branding and Quality** - Manual editing can lead to variations in audio levels, music choices, and overall feel. By using a configuration file (the JSON), your solution ensures every video adheres to a consistent, high-quality brand template.
+
+5. **The "Content Treadmill"** - Provides a powerful tool for marketing and social media teams to efficiently create the high volume of content needed to stay relevant on platforms like TikTok, Instagram Reels, and YouTube Shorts.
+
 ## 🎯 Use Cases
 
-### Content Creation
+### 1. Automated Social Media Video Production
 
-- **YouTube Videos** - Automated narration with background music
-- **Podcasts** - Convert text to audio with intro/outro music
-- **Educational Content** - Lecture videos with timed sound effects
+**Scenario:** A marketing team needs to create 5-10 short-form videos per week for Instagram and TikTok. The format is always the same: a short clip with a voiceover, background music, and a "swoosh" sound effect for transitions.
 
-### Business Applications
+**Problem:** Manually creating these videos is tedious, repetitive, and takes up a significant portion of a social media manager's time.
 
-- **Product Demos** - Automated video generation from scripts
-- **Training Materials** - Consistent narration across modules
-- **Marketing Videos** - Scalable video content production
+**Solution:** The manager simply provides the video clip and a simple JSON file with the voiceover text for each new video. The system automatically generates the ready-to-post video, complete with music and SFX, freeing up the team to focus on strategy and community engagement.
 
-### Creative Projects
+### 2. Dynamic E-commerce Product Demos
 
-- **Storytelling** - Audio books with background ambiance
-- **Game Development** - Automated cutscene generation
-- **Social Media** - Batch video creation for campaigns
+**Scenario:** An online retailer has thousands of products. They want to create a short video for each product page that highlights key features.
+
+**Problem:** It is financially and logistically impossible to hire a video team to create and narrate thousands of unique videos.
+
+**Solution:** The company can use a template video and programmatically generate a JSON file for each product from their database. The TTS data would be populated with product features. This allows them to automatically create a unique, narrated video for every single item in their catalog.
+
+### 3. Content Localization at Scale
+
+**Scenario:** A global company creates a training video in English. They need to distribute the same video to their teams in Germany, Japan, and Spain.
+
+**Problem:** Hiring voice actors and video editors for multiple languages is slow and extremely expensive.
+
+**Solution:** The company uses the exact same video file. They create three different JSON files, one for each language, with the script translated. By changing the TTS voice to German, Japanese, or Spanish Polly voices, they can generate professionally narrated versions for each region in a fraction of the time and cost.
+
+### 4. Automated Real Estate Video Tours
+
+**Scenario:** A real estate agency takes raw video walkthroughs of their properties. They need to add a professional voiceover describing each room and some pleasant background music.
+
+**Problem:** Agents are not video editors. Outsourcing this work is costly and adds days to the time it takes to get a listing online.
+
+**Solution:** An agent can upload their phone video and fill out a simple web form that generates the JSON file (e.g., "At 15 seconds, say 'Here we have the spacious, open-concept kitchen'"). The system produces a polished, ready-to-use video tour that can be immediately added to the listing.
+
+### 5. Rapid News Clip Generation
+
+**Scenario:** A digital news outlet needs to quickly publish video clips about breaking news. They have stock footage and a script from a journalist.
+
+**Problem:** In a 24/7 news cycle, the time it takes for a video editor to become available and render a video can mean missing the peak moment of interest.
+
+**Solution:** A journalist can submit their script into a system that generates the JSON. The system can use a standard "news-style" Polly voice to narrate the script over stock footage, add the channel's theme music, and publish a video to the web within minutes of the story breaking.
 
 ## 🛠️ Development
 
@@ -164,10 +214,13 @@ See [SCHEMA.md](SCHEMA.md) for complete documentation.
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+
+# Test AWS Polly locally (requires AWS credentials)
+python3 test_tts_local.py
 
 # Test locally (requires AWS credentials)
-python test_local.py
+python3 test_local.py
 
 # Test individual components
 sam local invoke SubmitJobFunction -e events/submit-job.json
