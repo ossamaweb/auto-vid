@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 
 # Add paths for imports
-sys.path.append("src")
+sys.path.append("src/video_processor")
 sys.path.append("layers/auto-vid-shared")
-from video_processor.video_processor import VideoProcessor
+from video_processor import VideoProcessor
 from job_validator import validate_job_spec
 
 # Configure logging with colors

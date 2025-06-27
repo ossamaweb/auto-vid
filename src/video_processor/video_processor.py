@@ -1,8 +1,8 @@
 import os
 import logging
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
-from video_processor.asset_manager import AssetManager
-from video_processor.tts_generator import TTSGenerator
+from asset_manager import AssetManager
+from tts_generator import TTSGenerator
 
 
 logger = logging.getLogger(__name__)
