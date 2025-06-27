@@ -12,6 +12,11 @@ class WebhookNotifier:
     def __init__(self):
         self.retry_attempts = 3
         self.timeout = 30
+        self.backoff_base = 2
+
+        # Error categorization
+        self.permanent_errors = {400, 401, 403, 404, 405, 410, 422}
+        self.temporary_errors = {408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524}
 
     def send_notification(self, webhook_config, payload: Dict[str, Any]) -> bool:
         """Send webhook notification with retry logic"""
@@ -32,6 +37,7 @@ class WebhookNotifier:
 
         for attempt in range(self.retry_attempts):
             try:
+                logger.info(f"Sending webhook to {url} (attempt {attempt + 1})")
                 response = requests.request(
                     method=method,
                     url=url,
@@ -43,31 +49,40 @@ class WebhookNotifier:
                 if response.status_code < 400:
                     logger.info(f"Webhook notification sent successfully to {url}")
                     return True
-                elif response.status_code < 500:
-                    # 4xx errors - don't retry
+                elif response.status_code in self.permanent_errors:
                     logger.error(
-                        f"Webhook failed with client error {response.status_code}: {response.text}"
+                        f"Webhook failed with permanent error {response.status_code}: {response.text}"
                     )
                     return False
-                else:
-                    # 5xx errors - retry
+                elif (
+                    response.status_code in self.temporary_errors
+                    or response.status_code >= 500
+                ):
                     logger.warning(
-                        f"Webhook attempt {attempt + 1} failed with server error {response.status_code}"
+                        f"Webhook attempt {attempt + 1} failed with temporary error {response.status_code}"
+                    )
+                else:
+                    logger.warning(
+                        f"Webhook attempt {attempt + 1} failed with status {response.status_code}"
                     )
 
-            except requests.exceptions.Timeout:
-                logger.warning(f"Webhook attempt {attempt + 1} timed out")
-            except requests.exceptions.ConnectionError:
-                logger.warning(f"Webhook attempt {attempt + 1} connection failed")
-            except Exception as e:
-                logger.error(f"Webhook attempt {attempt + 1} failed: {str(e)}")
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.SSLError,
+            ) as e:
+                logger.warning(f"Webhook attempt {attempt + 1} network error: {str(e)}")
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Webhook attempt {attempt + 1} failed: {str(e)}")
+                if attempt == self.retry_attempts - 1:  # Last attempt
+                    break
 
             # Exponential backoff: 1s, 2s, 4s
             if attempt < self.retry_attempts - 1:
-                time.sleep(2**attempt)
+                time.sleep(self.backoff_base**attempt)
 
         logger.error(
-            f"Webhook notification failed after {self.retry_attempts} attempts"
+            f"Webhook notification failed after {self.retry_attempts} attempts: {url}"
         )
         return False
 
