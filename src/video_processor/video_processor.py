@@ -56,9 +56,9 @@ class VideoProcessor:
                     job_spec.backgroundMusic, audio_assets, video_duration
                 )
 
-            for event in job_spec.timeline:
+            for index, event in enumerate(job_spec.timeline):
                 if event.type == "tts":
-                    clip = self._create_tts_clip(event, job_temp_dir)
+                    clip = self._create_tts_clip(event, index, job_temp_dir)
                     audio_clips.append(clip)
                     # Collect ducking range if duckingLevel is specified
                     ducking_level = event.data.duckingLevel
@@ -260,7 +260,7 @@ class VideoProcessor:
 
         return final_audio
 
-    def _create_tts_clip(self, event, job_temp_dir):
+    def _create_tts_clip(self, event, index, job_temp_dir):
         """Create TTS audio clip"""
         data = event.data
         start_time = event.start
@@ -275,8 +275,8 @@ class VideoProcessor:
         language_code = provider_config.languageCode
         text_type = provider_config.textType
 
-        # Generate TTS
-        tts_path = os.path.join(job_temp_dir, f"tts_{start_time}.mp3")
+        # Generate TTS with unique filename using timeline index
+        tts_path = os.path.join(job_temp_dir, f"tts_{index}_{start_time}.mp3")
         self.tts_generator.generate_speech(
             data.text, tts_path, voice_id, engine, language_code, text_type
         )
