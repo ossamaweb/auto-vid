@@ -1,8 +1,8 @@
 import os
 import logging
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
-from asset_manager import AssetManager
-from tts_generator import TTSGenerator
+from video_processor.asset_manager import AssetManager
+from video_processor.tts_generator import TTSGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -98,6 +98,10 @@ class VideoProcessor:
             all_audio = [background_music] if background_music else []
             all_audio.extend(audio_clips)
             final_audio = CompositeAudioClip(all_audio)
+
+            # Trim clip if needed
+            if video_duration < final_audio.duration:
+                final_audio = final_audio.subclipped(0, video_duration)
 
             # Phase 7: Final assembly and export
             logger.info("Creating final video...")
