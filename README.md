@@ -21,6 +21,7 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **🎬 Professional Video Processing** - MoviePy-powered video editing with precise timeline control
 - **🗣️ AI Text-to-Speech** - AWS Polly with 90+ voices, multiple engines, and SSML support
 - **🎵 Smart Audio Mixing** - Background music with crossfading, ducking, and volume control
+- **🔔 Webhook Notifications** - Real-time job completion notifications with retry logic
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
 - **🔒 Production Security** - IAM least-privilege, input validation, and error handling
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
@@ -62,12 +63,13 @@ Monitor your AWS billing dashboard and set up billing alerts. See the [Cleanup](
 ### Prerequisites
 
 - **AWS CLI** configured with appropriate permissions
-- **SAM CLI** installed  
+- **SAM CLI** installed
 - **Python 3.12+**
 
 #### AWS Permissions for Local Testing
 
 Your AWS credentials need:
+
 - `AmazonPollyFullAccess` (for TTS generation)
 - `AmazonS3FullAccess` (for asset download/upload)
 - Or `PowerUserAccess` for comprehensive access
@@ -112,7 +114,13 @@ curl -X POST https://your-api-url/submit \
     },
     "backgroundMusic": {"playlist": ["music"], "volume": 0.3},
     "timeline": [],
-    "output": {"filename": "result.mp4"}
+    "output": {"filename": "result.mp4"},
+    "notifications": {
+      "webhook": {
+        "url": "https://your-app.com/webhook",
+        "headers": {"Authorization": "Bearer your-token"}
+      }
+    }
   }'
 
 # Check status
@@ -153,9 +161,18 @@ Auto-Vid uses a declarative JSON format for video generation:
       }
     }
   ],
-  "output": { "filename": "my-video.mp4" }
+  "output": { "filename": "my-video.mp4" },
+  "notifications": {
+    "webhook": {
+      "url": "https://your-app.com/webhook/complete",
+      "headers": { "Authorization": "Bearer token" },
+      "metadata": { "project": "demo", "priority": "high" }
+    }
+  }
 }
 ```
+
+See [SCHEMA.md](SCHEMA.md) for complete documentation.
 
 ### Advanced Features
 
@@ -164,8 +181,32 @@ Auto-Vid uses a declarative JSON format for video generation:
 - **Multiple TTS Engines** - Standard, neural, long-form, and generative
 - **SSML Support** - Advanced speech markup for pronunciation control
 - **Crossfading** - Smooth transitions between background music tracks
+- **Webhook Notifications** - Real-time completion notifications with custom headers and metadata
 
-See [SCHEMA.md](SCHEMA.md) for complete documentation.
+#### Webhook Payload
+
+When jobs complete, webhooks receive a JSON payload:
+
+```json
+{
+  "jobId": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "timestamp": "2024-01-15T10:30:45.123456+00:00",
+  "processingTime": 127.45,
+  "output": {
+    "url": "s3://auto-vid-bucket/outputs/my-video.mp4",
+    "duration": 90.2,
+    "size": 15728640
+  },
+  "error": null,
+  "metadata": {
+    "project": "demo",
+    "priority": "high"
+  }
+}
+```
+
+See [SCHEMA.md](SCHEMA.md#_payload_fields) for complete webhook payload documentation.
 
 ## 💼 Business Problems Solved
 
@@ -292,16 +333,19 @@ sam local invoke videoprocessorfunction -e events/event-process-job.json \
 ### Troubleshooting Local Development
 
 **CloudFormation References Don't Work Locally**
+
 - `AUTO_VID_BUCKET: !Ref AutoVidBucket` becomes literal `"AutoVidBucket"` in local testing
 - Use actual bucket names in `env.json` for S3 testing
 - Or use local destinations for simpler testing
 
 **Missing AWS Credentials**
+
 - Ensure `.env` file has valid AWS credentials for Python scripts
 - Ensure `env.json` has valid credentials for container testing
 - Test with: `aws sts get-caller-identity`
 
 **Import Errors**
+
 - Run from project root directory
 - Ensure all `__init__.py` files are present
 - Check Python path with `python3 -c "import sys; print(sys.path)"`
@@ -365,6 +409,8 @@ SAM handles the entire deployment automatically:
 
 - `AUTO_VID_BUCKET` - Managed S3 bucket name (auto-configured)
 - `AWS_LAMBDA_FUNCTION_NAME` - Detected automatically in Lambda
+- `WEBHOOK_MAX_HEADERS_SIZE` - Maximum webhook headers size in bytes (default: 1024)
+- `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size in bytes (default: 1024)
 
 ### Resource Naming
 

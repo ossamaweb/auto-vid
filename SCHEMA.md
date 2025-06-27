@@ -4,13 +4,14 @@ This document outlines the schema for the "Video Job Specification" JSON file. T
 
 ### Top-Level Structure
 
-The JSON object has five main keys:
+The JSON object has six main keys:
 
 - `metadata`: Information _about_ the project for tracking and organization.
 - `assets`: A library of all media files (video, audio) to be used.
 - `backgroundMusic`: Configuration for continuous background audio throughout the video.
 - `timeline`: A chronological sequence of timed events that happen _on_ the video.
 - `output`: Specifications for the final rendered file.
+- `notifications`: Configuration for job completion notifications.
 
 ---
 
@@ -90,6 +91,54 @@ Defines the properties of the final, rendered video file.
   - `"audio_bitrate"` (String, Optional): Audio bitrate (e.g., "128k", "320k").
   - `"fps"` (Float, Optional): Output frame rate.
 
+#### 6. `notifications` (Object, Optional)
+
+Defines notification settings for job completion.
+
+- `"webhook"` (Object, Optional): Webhook notification configuration.
+  - `"url"` (String, Required): The webhook endpoint URL (must be HTTPS for production).
+  - `"method"` (String, Default: "POST"): HTTP method to use. Options: "POST" or "PUT".
+  - `"headers"` (Object, Optional): Custom HTTP headers to send with the webhook request. Maximum size: 1KB.
+  - `"metadata"` (Object, Optional): Custom metadata to include in the webhook payload. Supports string, number, and boolean values. Maximum size: 1KB.
+
+**Webhook Payload:**
+The webhook will receive a JSON payload with the following structure:
+```json
+{
+  "jobId": "uuid",
+  "status": "completed|failed",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "processingTime": 120.5,
+  "output": {
+    "url": "s3://bucket/outputs/video.mp4",
+    "duration": 45.2,
+    "size": 15728640
+  },
+  "error": null,
+  "metadata": {...}
+}
+```
+
+**Payload Fields:**
+- `jobId` - Unique job identifier
+- `status` - "completed" or "failed"
+- `timestamp` - ISO 8601 completion time (UTC)
+- `processingTime` - Duration in seconds (rounded to 2 decimals)
+- `output.url` - S3 URL of generated video (null on failure)
+- `output.duration` - Video length in seconds (null on failure)
+- `output.size` - File size in bytes (null on failure)
+- `error` - Error message (failure only)
+- `metadata` - Custom user-provided metadata
+
+**Note:** The `output` section is always present. On failure, `url`, `duration`, and `size` will be `null`.
+```
+
+**Retry Logic:**
+- 3 automatic retry attempts with exponential backoff (1s, 2s, 4s)
+- 4xx errors are not retried (client configuration issues)
+- 5xx errors and network timeouts are retried
+- 30-second request timeout
+
 ### S3 Bucket Usage
 
 The system supports both managed and custom S3 buckets:
@@ -137,6 +186,18 @@ The system supports both managed and custom S3 buckets:
   "timeline": [],
   "output": {
     "filename": "video-with-music.mp4"
+  },
+  "notifications": {
+    "webhook": {
+      "url": "https://your-app.com/webhook/video-complete",
+      "headers": {
+        "Authorization": "Bearer your-token"
+      },
+      "metadata": {
+        "projectType": "background-music-only",
+        "priority": "normal"
+      }
+    }
   }
 }
 ```
@@ -234,6 +295,21 @@ The system supports both managed and custom S3 buckets:
     "encoding": {
       "preset": "fast",
       "bitrate": "2500k"
+    }
+  },
+  "notifications": {
+    "webhook": {
+      "url": "https://api.example.com/webhooks/video-complete",
+      "headers": {
+        "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+        "X-Project-ID": "tyler-perry-series"
+      },
+      "metadata": {
+        "series": "celebrity-earnings",
+        "episode": 1,
+        "duration_target": 90,
+        "auto_publish": true
+      }
     }
   }
 }

@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, HttpUrl
 from typing import List, Optional, Union, Literal, Dict, Any
 from enum import Enum
+import json
+import os
 from polly_constants import LanguageCode, VoiceId
 
 
@@ -77,6 +79,31 @@ class Encoding(BaseModel):
     fps: Optional[float] = None
 
 
+class WebhookConfig(BaseModel):
+    url: HttpUrl
+    method: Literal["POST", "PUT"] = "POST"
+    headers: Optional[Dict[str, str]] = None
+    metadata: Optional[Dict[str, Union[str, int, float, bool]]] = None
+    
+    @field_validator('headers')
+    @classmethod
+    def validate_headers_size(cls, v):
+        if v and len(json.dumps(v)) > int(os.getenv('WEBHOOK_MAX_HEADERS_SIZE', '1024')):
+            raise ValueError("Headers exceed 1KB limit")
+        return v
+    
+    @field_validator('metadata')
+    @classmethod
+    def validate_metadata_size(cls, v):
+        if v and len(json.dumps(v)) > int(os.getenv('WEBHOOK_MAX_METADATA_SIZE', '1024')):
+            raise ValueError("Metadata exceed 1KB limit")
+        return v
+
+
+class NotificationsConfig(BaseModel):
+    webhook: Optional[WebhookConfig] = None
+
+
 class Output(BaseModel):
     destination: Optional[str] = None
     filename: str
@@ -89,6 +116,7 @@ class JobSpec(BaseModel):
     backgroundMusic: Optional[BackgroundMusic] = None
     timeline: List[TimelineEvent]
     output: Output
+    notifications: Optional[NotificationsConfig] = None
 
     @field_validator("backgroundMusic")
     @classmethod

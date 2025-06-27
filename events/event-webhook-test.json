@@ -1,0 +1,7 @@
+{
+  "Records": [
+    {
+      "body": "{\"jobId\": \"webhook-test-123\", \"jobSpec\": {\"metadata\": {\"projectId\": \"webhook_test\", \"title\": \"Webhook Test\"}, \"assets\": {\"video\": {\"id\": \"main_video\", \"source\": \"s3://test-bucket/video.mp4\"}, \"audio\": [{\"id\": \"bgm\", \"source\": \"s3://test-bucket/music.mp3\"}]}, \"backgroundMusic\": {\"playlist\": [\"bgm\"], \"volume\": 0.3}, \"timeline\": [], \"output\": {\"destination\": \"./output\", \"filename\": \"webhook-test.mp4\"}, \"notifications\": {\"webhook\": {\"url\": \"https://webhook.site/unique-id\", \"headers\": {\"Authorization\": \"Bearer test-token\", \"X-Test\": \"webhook\"}, \"metadata\": {\"environment\": \"test\", \"priority\": \"high\", \"cost\": 5.99}}}}}"
+    }
+  ]
+}
