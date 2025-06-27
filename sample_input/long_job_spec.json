@@ -64,7 +64,7 @@
   },
   "timeline": [
     {
-      "start": -1,
+      "start": 0,
       "type": "tts",
       "data": {
         "text": "What if I told you Tyler Perry isn't just a filmmaker, but a financial titan whose career earnings will absolutely shock you? I'm your host, and this is The Movie Money Man, where I dive deep into the staggering numbers behind Hollywood's biggest players. Today, we're unraveling the financial empire of Tyler Perry.",
@@ -81,7 +81,7 @@
       "start": 49,
       "type": "audio",
       "data": {
-        "assetId": "sfx_swoosh",
+        "assetId": "sfx_swooshx",
         "volume": 0.45,
         "duckingLevel": 0.5,
         "duckingFadeDuration": 0.2
