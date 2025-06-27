@@ -46,7 +46,7 @@ def test_video_processing():
     job_id = str(uuid.uuid4())
 
     # Load sample job spec
-    with open("sample_input/long_job_spec.json", "r") as f:
+    with open("sample_input/social_media_short.spec.json", "r") as f:
         job_spec_dict = json.load(f)
 
     try:
