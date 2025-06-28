@@ -80,6 +80,7 @@ Resources:
           AUTO_VID_BUCKET: !Ref AutoVidBucket
           AWS_REGION: !Ref AWS::Region
           JOB_STATUS_TABLE: !Ref JobStatusTable
+          DYNAMODB_JOB_TTL_SECONDS: 604800
           WEBHOOK_MAX_HEADERS_SIZE: 1024
           WEBHOOK_MAX_METADATA_SIZE: 1024
           S3_PRESIGNED_URL_EXPIRATION: 86400
@@ -112,6 +113,7 @@ Resources:
       Environment:
         Variables:
           JOB_STATUS_TABLE: !Ref JobStatusTable
+          DYNAMODB_JOB_TTL_SECONDS: 604800
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref JobStatusTable

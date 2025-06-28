@@ -17,13 +17,13 @@ The JSON object has six main keys:
 
 ### Section Breakdown
 
-#### 1. `metadata` (Object, Optional)
+#### 1. `jobInfo` (Object, Optional)
 
 Contains general information about the video job.
 
-- `"projectId"` (String, Optional): A unique identifier for the job or project.
-- `"title"` (String, Optional): The human-readable title of the video.
-- `"tags"` (Array of Strings, Optional): A list of tags for searching and categorization.
+- `"projectId"` (String, Optional, Max 100 chars): A unique identifier for the job or project.
+- `"title"` (String, Optional, Max 200 chars): The human-readable title of the video.
+- `"tags"` (Array of Strings, Optional, Max 10 tags, 50 chars each): A list of tags for searching and categorization.
 
 #### 2. `assets` (Object, Required)
 
@@ -177,7 +177,7 @@ The system supports both managed and custom S3 buckets:
 ```json
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
-  "metadata": {
+  "jobInfo": {
     "projectId": "simple_example",
     "title": "Background Music Only Example"
   },
@@ -221,7 +221,7 @@ The system supports both managed and custom S3 buckets:
 ```json
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
-  "metadata": {
+  "jobInfo": {
     "projectId": "project_name",
     "title": "My Automated Video v1",
     "tags": ["automated"]

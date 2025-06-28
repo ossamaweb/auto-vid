@@ -32,15 +32,15 @@ def lambda_handler(event, context):
         except ValueError as e:
             return create_error_response(400, str(e))
 
-        # Generate job ID and extract metadata
+        # Generate job ID and extract job info
         job_id = str(uuid.uuid4())
-        metadata = extract_job_metadata(job_spec_dict)
+        job_info = extract_job_info(job_spec_dict)
 
         # Initialize job status manager
         job_manager = JobStatusManager()
 
         # Create job record in DynamoDB and get standardized response
-        response_data = job_manager.create_job(job_id, job_spec_dict, metadata)
+        response_data = job_manager.create_job(job_id, job_spec_dict, job_info)
 
         # Send job to SQS queue
         queue_url = os.environ["JOB_QUEUE_URL"]
@@ -78,18 +78,20 @@ def create_error_response(status_code: int, error_message: str) -> Dict[str, Any
     }
 
 
-def extract_job_metadata(job_spec: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract useful metadata from job spec for tracking"""
-    metadata = {}
+def extract_job_info(job_spec: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract job info from job spec for tracking"""
+    job_info = {}
 
-    if "metadata" in job_spec:
-        spec_metadata = job_spec["metadata"]
-        if "projectId" in spec_metadata:
-            metadata["projectId"] = spec_metadata["projectId"]
-        if "title" in spec_metadata:
-            metadata["title"] = spec_metadata["title"]
+    if "jobInfo" in job_spec:
+        spec_job_info = job_spec["jobInfo"]
+        if "projectId" in spec_job_info:
+            job_info["projectId"] = spec_job_info["projectId"]
+        if "title" in spec_job_info:
+            job_info["title"] = spec_job_info["title"]
+        if "tags" in spec_job_info:
+            job_info["tags"] = spec_job_info["tags"]
 
     if "output" in job_spec and "filename" in job_spec["output"]:
-        metadata["outputFilename"] = job_spec["output"]["filename"]
+        job_info["outputFilename"] = job_spec["output"]["filename"]
 
-    return metadata
+    return job_info

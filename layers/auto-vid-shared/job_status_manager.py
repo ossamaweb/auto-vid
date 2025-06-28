@@ -15,13 +15,11 @@ class JobStatusManager:
         self,
         job_id: str,
         job_spec: Dict[Any, Any],
-        metadata: Optional[Dict[str, Any]] = None,
+        job_info: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create a new job record with submitted status and return standardized response"""
         timestamp = datetime.now(timezone.utc).isoformat()
-        ttl_seconds = int(
-            os.environ.get("DYNAMODB_JOB_TTL_SECONDS", str(7 * 24 * 60 * 60))
-        )
+        ttl_seconds = int(os.environ.get('DYNAMODB_JOB_TTL_SECONDS', '604800'))
         ttl = int(datetime.now(timezone.utc).timestamp()) + ttl_seconds
 
         item = {
@@ -33,8 +31,8 @@ class JobStatusManager:
             "ttl": ttl,
         }
 
-        if metadata:
-            item["metadata"] = metadata
+        if job_info:
+            item["jobInfo"] = job_info
 
         self.table.put_item(Item=item)
 

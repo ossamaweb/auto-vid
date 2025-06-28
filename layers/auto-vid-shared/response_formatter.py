@@ -19,5 +19,6 @@ def create_standardized_response(job_data: Dict[str, Any]) -> Dict[str, Any]:
             'size': job_data.get('size')
         },
         'error': job_data.get('error'),
+        'jobInfo': job_data.get('jobInfo', {}),
         'metadata': job_data.get('metadata', {})
     }

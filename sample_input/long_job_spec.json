@@ -1,6 +1,6 @@
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
-  "metadata": {
+  "jobInfo": {
     "projectId": "tmmm",
     "title": "Tyler Perry Paychecks - Hits and Flops",
     "tags": [

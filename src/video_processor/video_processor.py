@@ -186,10 +186,13 @@ class VideoProcessor:
             processing_time = time.time() - start_time
             if job_spec.notifications and job_spec.notifications.webhook:
                 file_size = os.path.getsize(local_output)
+                job_info = getattr(job_spec, 'jobInfo', None)
+                job_info_dict = job_info.model_dump() if job_info else None
                 payload = self.webhook_notifier.create_payload(
                     job_id=job_id,
                     status="completed",
                     processing_time=processing_time,
+                    job_info=job_info_dict,
                     output_url=presigned_url,
                     s3_uri=s3_uri,
                     duration=video_duration,
@@ -207,10 +210,13 @@ class VideoProcessor:
             # Send failure webhook notification
             processing_time = time.time() - start_time
             if job_spec.notifications and job_spec.notifications.webhook:
+                job_info = getattr(job_spec, 'jobInfo', None)
+                job_info_dict = job_info.model_dump() if job_info else None
                 payload = self.webhook_notifier.create_payload(
                     job_id=job_id,
                     status="failed",
                     processing_time=processing_time,
+                    job_info=job_info_dict,
                     error=str(e),
                 )
                 self.webhook_notifier.send_notification(
