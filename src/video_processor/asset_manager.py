@@ -13,10 +13,14 @@ logger = logging.getLogger(__name__)
 class AssetManager:
     def __init__(self):
         """Initialize AssetManager with S3 client and retry configuration"""
+        region = os.getenv('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client(
             "s3",
+            region_name=region,
             config=Config(
-                retries={"max_attempts": 3, "mode": "adaptive"}, max_pool_connections=50
+                retries={"max_attempts": 3, "mode": "adaptive"}, 
+                max_pool_connections=50,
+                signature_version='s3v4'
             ),
         )
         self.s3_uri_pattern = re.compile(r"^s3://([^/]+)/(.+)$")
@@ -54,7 +58,7 @@ class AssetManager:
             self.s3_client.upload_file(local_path, bucket, key)
             result_url = f"s3://{bucket}/{key}"
             logger.info(f"Successfully uploaded to {result_url}")
-            return result_url
+            return result_url, bucket, key
         except ClientError as e:
             logger.error(f"Failed to upload to S3: {e}")
             raise
@@ -73,7 +77,7 @@ class AssetManager:
             logger.info(f"Copying {local_path} to {final_path}")
             shutil.copy2(local_path, final_path)
             logger.info(f"Successfully saved to {final_path}")
-            return final_path
+            return final_path, None, None
         except Exception as e:
             logger.error(f"Failed to save to local destination: {e}")
             raise
@@ -177,4 +181,20 @@ class AssetManager:
             return local_path
         except Exception as e:
             logger.error(f"Failed to copy local file: {e}")
+            raise
+    
+    def generate_presigned_url(self, bucket, key, expiration_seconds=None):
+        """Generate pre-signed URL for S3 object"""
+        if expiration_seconds is None:
+            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))  # 24 hours default
+        
+        try:
+            presigned_url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket, 'Key': key},
+                ExpiresIn=expiration_seconds
+            )
+            return presigned_url
+        except ClientError as e:
+            logger.error(f"Failed to generate presigned URL: {e}")
             raise

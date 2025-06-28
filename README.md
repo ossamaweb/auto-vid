@@ -181,6 +181,7 @@ See [SCHEMA.md](SCHEMA.md) for complete documentation.
 - **Multiple TTS Engines** - Standard, neural, long-form, and generative
 - **SSML Support** - Advanced speech markup for pronunciation control
 - **Crossfading** - Smooth transitions between background music tracks
+- **Pre-signed Download URLs** - Secure, time-limited download links with configurable expiration
 - **Webhook Notifications** - Real-time completion notifications with custom headers and metadata
 
 #### Webhook Payload
@@ -194,7 +195,9 @@ When jobs complete, webhooks receive a JSON payload:
   "timestamp": "2024-01-15T10:30:45.123456+00:00",
   "processingTime": 127.45,
   "output": {
-    "url": "s3://auto-vid-bucket/outputs/my-video.mp4",
+    "url": "https://bucket.s3.amazonaws.com/outputs/my-video.mp4?X-Amz-Algorithm=...",
+    "urlExpiresAt": "2024-01-16T10:30:45.123456+00:00",
+    "s3Uri": "s3://auto-vid-bucket/outputs/my-video.mp4",
     "duration": 90.2,
     "size": 15728640
   },
@@ -408,9 +411,11 @@ SAM handles the entire deployment automatically:
 ### Environment Variables
 
 - `AUTO_VID_BUCKET` - Managed S3 bucket name (auto-configured)
+- `AWS_REGION` - AWS region for S3 operations (auto-configured from deployment region)
 - `AWS_LAMBDA_FUNCTION_NAME` - Detected automatically in Lambda
 - `WEBHOOK_MAX_HEADERS_SIZE` - Maximum webhook headers size in bytes (default: 1024)
 - `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size in bytes (default: 1024)
+- `S3_PRESIGNED_URL_EXPIRATION` - Pre-signed URL expiration in seconds (default: 86400 = 24 hours)
 
 ### Resource Naming
 

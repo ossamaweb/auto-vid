@@ -110,7 +110,9 @@ The webhook will receive a JSON payload with the following structure:
   "timestamp": "2024-01-01T12:00:00Z",
   "processingTime": 120.5,
   "output": {
-    "url": "s3://bucket/outputs/video.mp4",
+    "url": "https://bucket.s3.amazonaws.com/outputs/video.mp4?X-Amz-Algorithm=...",
+    "urlExpiresAt": "2024-01-02T12:00:00Z",
+    "s3Uri": "s3://bucket/outputs/video.mp4",
     "duration": 45.2,
     "size": 15728640
   },
@@ -124,13 +126,21 @@ The webhook will receive a JSON payload with the following structure:
 - `status` - "completed" or "failed"
 - `timestamp` - ISO 8601 completion time (UTC)
 - `processingTime` - Duration in seconds (rounded to 2 decimals)
-- `output.url` - S3 URL of generated video (null on failure)
+- `output.url` - Pre-signed download URL (null if generation failed)
+- `output.urlExpiresAt` - ISO 8601 expiration time for download URL (null if no URL)
+- `output.s3Uri` - Internal S3 URI reference (null for local files)
 - `output.duration` - Video length in seconds (null on failure)
 - `output.size` - File size in bytes (null on failure)
 - `error` - Error message (failure only)
 - `metadata` - Custom user-provided metadata
 
-**Note:** The `output` section is always present. On failure, `url`, `duration`, and `size` will be `null`.
+**Note:** The `output` section is always present with all fields included. On failure or when unavailable, fields are set to `null`.
+
+**URL Behavior:**
+- `url` - Pre-signed download URL (expires in 24 hours by default)
+- `urlExpiresAt` - Only present when `url` is a valid pre-signed URL
+- `s3Uri` - Always present for S3 uploads, `null` for local files
+- If pre-signed URL generation fails, `url` and `urlExpiresAt` will be `null`
 ```
 
 **Retry Logic:**

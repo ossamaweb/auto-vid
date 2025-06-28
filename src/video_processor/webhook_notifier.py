@@ -1,9 +1,10 @@
 import json
 import logging
 import time
+import os
 from typing import Optional, Dict, Any
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,7 @@ class WebhookNotifier:
         status: str,
         processing_time: float,
         output_url: Optional[str] = None,
+        s3_uri: Optional[str] = None,
         error: Optional[str] = None,
         duration: Optional[float] = None,
         file_size: Optional[int] = None,
@@ -104,7 +106,24 @@ class WebhookNotifier:
             "processingTime": round(processing_time, 2),
         }
 
-        payload["output"] = {"url": output_url, "duration": duration, "size": file_size}
+        from datetime import timedelta
+        
+        # Always include all output fields
+        output_payload = {
+            "url": output_url,
+            "urlExpiresAt": None,
+            "s3Uri": s3_uri,
+            "duration": duration,
+            "size": file_size
+        }
+        
+        # Only set expiration if we have a presigned URL
+        if output_url and s3_uri and output_url.startswith('https://'):
+            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))
+            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
+            output_payload["urlExpiresAt"] = expires_at.isoformat()
+            
+        payload["output"] = output_payload
 
         if error:
             payload["error"] = error

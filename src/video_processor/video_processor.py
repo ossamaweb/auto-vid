@@ -144,6 +144,15 @@ class VideoProcessor:
                 logger=None if is_lambda else "bar",
             )
 
+            # Cleanup MoviePy objects before upload to free memory
+            video.close()
+            final_video.close()
+            final_audio.close()
+            for clip in audio_clips:
+                clip.close()
+            if background_music:
+                background_music.close()
+
             # Phase 8: Upload result
             logger.info("Uploading result...")
             destination = job_spec.output.destination
@@ -157,18 +166,21 @@ class VideoProcessor:
                         "No output destination specified and no default bucket available"
                     )
 
-            result_url = self.asset_manager.upload_result(
+            result_path, bucket, key = self.asset_manager.upload_result(
                 local_output, destination, output_filename
             )
-
-            # Cleanup
-            video.close()
-            final_video.close()
-            final_audio.close()
-            for clip in audio_clips:
-                clip.close()
-            if background_music:
-                background_music.close()
+            
+            # Generate presigned URL for S3 uploads only
+            if bucket and key:
+                s3_uri = f"s3://{bucket}/{key}"
+                try:
+                    presigned_url = self.asset_manager.generate_presigned_url(bucket, key)
+                except Exception as e:
+                    logger.warning(f"Failed to generate presigned URL: {e}")
+                    presigned_url = None
+            else:
+                presigned_url = result_path  # Local file path
+                s3_uri = None
 
             # Send success webhook notification
             processing_time = time.time() - start_time
@@ -178,7 +190,8 @@ class VideoProcessor:
                     job_id=job_id,
                     status="completed",
                     processing_time=processing_time,
-                    output_url=result_url,
+                    output_url=presigned_url,
+                    s3_uri=s3_uri,
                     duration=video_duration,
                     file_size=file_size,
                 )
@@ -186,7 +199,7 @@ class VideoProcessor:
                     job_spec.notifications.webhook, payload
                 )
 
-            return result_url
+            return presigned_url
 
         except Exception as e:
             logger.error(f"Video processing failed: {str(e)}")
