@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 
 from job_validator import validate_job_spec
-from job_status_manager import JobStatusManager
+from job_status_manager import JobManager
 
 
 def lambda_handler(event, context):
@@ -36,8 +36,8 @@ def lambda_handler(event, context):
         job_id = str(uuid.uuid4())
         job_info = extract_job_info(job_spec_dict)
 
-        # Initialize job status manager
-        job_manager = JobStatusManager()
+        # Initialize job manager
+        job_manager = JobManager()
 
         # Create job record in DynamoDB and get standardized response
         response_data = job_manager.create_job(job_id, job_spec_dict, job_info)

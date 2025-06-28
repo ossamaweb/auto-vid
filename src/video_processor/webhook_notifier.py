@@ -103,24 +103,27 @@ class WebhookNotifier:
         updated_at: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Create webhook payload using shared response formatter"""
-        job_data = {
-            "jobId": job_id,
-            "status": status,
-            "submittedAt": submitted_at,
-            "updatedAt": updated_at,
-            "completedAt": datetime.now(timezone.utc).isoformat() if status in ["completed", "failed"] else None,
-            "processingTime": round(processing_time, 2),
-            "resultUrl": output_url,
-            "s3Uri": s3_uri,
-            "duration": duration,
-            "size": file_size,
-            "error": error,
-            "jobInfo": job_info or {}
-        }
-
+        completed_at = datetime.now(timezone.utc).isoformat() if status in ["completed", "failed"] else None
+        url_expires_at = None
+        
         if output_url and s3_uri and output_url.startswith("https://"):
             expiration_seconds = int(os.getenv("S3_PRESIGNED_URL_EXPIRATION", "86400"))
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
-            job_data["urlExpiresAt"] = expires_at.isoformat()
+            url_expires_at = expires_at.isoformat()
 
-        return create_standardized_response(job_data)
+        return create_standardized_response(
+            job_id=job_id,
+            status=status,
+            submitted_at=submitted_at,
+            updated_at=updated_at,
+            completed_at=completed_at,
+            processing_time=round(processing_time, 2),
+            output_url=output_url,
+            url_expires_at=url_expires_at,
+            s3_uri=s3_uri,
+            duration=duration,
+            file_size=file_size,
+            error=error,
+            job_info=job_info,
+            metadata=None  # Webhook metadata handled by send_notification
+        )

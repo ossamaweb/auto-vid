@@ -1,8 +1,7 @@
 import json
 from datetime import datetime, timezone
 from typing import Dict, Any
-from job_status_manager import JobStatusManager
-from response_formatter import create_standardized_response
+from job_status_manager import JobManager
 
 
 def lambda_handler(event, context):
@@ -15,13 +14,16 @@ def lambda_handler(event, context):
         job_id = event["pathParameters"]["jobId"]
 
         # Get job status from DynamoDB
-        job_manager = JobStatusManager()
+        job_manager = JobManager()
         job_data = job_manager.get_job(job_id)
 
         if not job_data:
             return create_error_response(404, f"Job {job_id} not found")
 
-        standardized_response = create_standardized_response(job_data)
+        # Remove DynamoDB-specific fields and return standardized response
+        standardized_response = {
+            k: v for k, v in job_data.items() if k not in ["jobSpec", "ttl"]
+        }
 
         return {
             "statusCode": 200,

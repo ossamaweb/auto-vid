@@ -197,6 +197,8 @@ class VideoProcessor:
                     s3_uri=s3_uri,
                     duration=video_duration,
                     file_size=file_size,
+                    submitted_at=None,
+                    updated_at=None
                 )
                 self.webhook_notifier.send_notification(
                     job_spec.notifications.webhook, payload
@@ -218,6 +220,8 @@ class VideoProcessor:
                     processing_time=processing_time,
                     job_info=job_info_dict,
                     error=str(e),
+                    submitted_at=None,
+                    updated_at=None
                 )
                 self.webhook_notifier.send_notification(
                     job_spec.notifications.webhook, payload

@@ -14,7 +14,7 @@ layers_path = os.path.join(
 )
 sys.path.insert(0, os.path.abspath(layers_path))
 from job_validator import validate_job_spec  # noqa: E402
-from job_status_manager import JobStatusManager  # noqa: E402
+from job_status_manager import JobManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
     transient_failures = []
     permanent_failures = []
     successful_jobs = []
-    job_manager = JobStatusManager()
+    job_manager = JobManager()
 
     # Parse SQS message
     for record in event["Records"]:
@@ -56,23 +56,29 @@ def lambda_handler(event, context):
         job_spec_dict = message_body["jobSpec"]
 
         try:
-            # Update status to processing
-            job_manager.update_status(job_id, "processing")
-            
             # Validate job spec (permanent failure)
             job_spec = validate_job_spec(job_spec_dict)
+
+            # Update status to processing
+            job_manager.update_status(job_id, "processing")
 
             # Process video job
             processor = VideoProcessor()
             result_url = processor.process_video_job(job_id, job_spec)
 
-            # Update status to completed
+            # Update job completion
             from datetime import datetime, timezone
-            job_manager.update_status(
-                job_id, 
-                "completed", 
-                resultUrl=result_url,
-                completedAt=datetime.now(timezone.utc).isoformat()
+
+            output_data = {
+                "url": presigned_url,
+                "urlExpiresAt": None,  # Set by asset_manager if applicable
+                "s3Uri": s3_uri,
+                "duration": video_duration,
+                "size": file_size,
+            }
+            file_size = os.path.getsize(local_output)
+            job_manager.update_job_completion(
+                job_id, "completed", processing_time, output_data
             )
 
             logger.info(f"Job {job_id} completed successfully. Result: {result_url}")
@@ -80,7 +86,14 @@ def lambda_handler(event, context):
 
         except ValueError as e:
             # Permanent error (validation failure) - don't retry
-            job_manager.update_status(job_id, "failed", error=str(e))
+            empty_output = {
+                "url": None,
+                "urlExpiresAt": None,
+                "s3Uri": None,
+                "duration": None,
+                "size": None,
+            }
+            job_manager.update_job_completion(job_id, "failed", 0, empty_output, str(e))
             logger.error(f"Job {job_id} permanently failed (validation): {str(e)}")
             permanent_failures.append(job_id)
 
@@ -92,7 +105,16 @@ def lambda_handler(event, context):
                 transient_failures.append(job_id)
             else:
                 # Permanent error - don't retry
-                job_manager.update_status(job_id, "failed", error=str(e))
+                empty_output = {
+                    "url": None,
+                    "urlExpiresAt": None,
+                    "s3Uri": None,
+                    "duration": None,
+                    "size": None,
+                }
+                job_manager.update_job_completion(
+                    job_id, "failed", processing_time, empty_output, str(e)
+                )
                 logger.error(f"Job {job_id} permanently failed: {str(e)}")
                 permanent_failures.append(job_id)
 
@@ -104,10 +126,10 @@ def lambda_handler(event, context):
     if permanent_failures:
         return {
             "statusCode": 400,
-            "body": f"Permanent failures: {', '.join(permanent_failures)}. Successful: {', '.join(successful_jobs)}"
+            "body": f"Permanent failures: {', '.join(permanent_failures)}. Successful: {', '.join(successful_jobs)}",
         }
-    
+
     return {
-        "statusCode": 200, 
-        "body": f"All jobs processed successfully: {', '.join(successful_jobs)}"
+        "statusCode": 200,
+        "body": f"All jobs processed successfully: {', '.join(successful_jobs)}",
     }
