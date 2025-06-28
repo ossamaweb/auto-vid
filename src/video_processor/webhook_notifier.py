@@ -1,10 +1,8 @@
-import json
 import logging
 import time
-import os
 from typing import Optional, Dict, Any
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from response_formatter import create_standardized_response
 
 logger = logging.getLogger(__name__)
@@ -104,7 +102,11 @@ class WebhookNotifier:
         updated_at: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Create webhook payload using shared response formatter"""
-        completed_at = datetime.now(timezone.utc).isoformat() if status in ["completed", "failed"] else None
+        completed_at = (
+            datetime.now(timezone.utc).isoformat()
+            if status in ["completed", "failed"]
+            else None
+        )
 
         return create_standardized_response(
             job_id=job_id,
@@ -120,5 +122,4 @@ class WebhookNotifier:
             file_size=file_size,
             error=error,
             job_info=job_info,
-            metadata=None  # Webhook metadata handled by send_notification
         )

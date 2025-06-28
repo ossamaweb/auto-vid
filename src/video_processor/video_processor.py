@@ -23,12 +23,30 @@ class VideoProcessor:
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
+    def cleanup_job_dir(self, job_temp_dir):
+        """Clean up job temporary directory"""
+
+        try:
+            import shutil
+
+            if os.path.exists(job_temp_dir):
+                shutil.rmtree(job_temp_dir)
+                logger.info(f"Cleaned up job temp directory: {job_temp_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup job temp directory: {str(e)}")
+
     def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
         start_time = time.time()
-        
+
+        # Create unique job directory
+        job_temp_dir = os.path.join(self.temp_dir, job_id)
+        os.makedirs(job_temp_dir, exist_ok=True)
+
         try:
-            return self._process_video_internal(job_id, job_spec, start_time)
+            return self._process_video_internal(
+                job_id, job_spec, job_temp_dir, start_time
+            )
         except Exception as e:
             processing_time = time.time() - start_time
             logger.error(f"Video processing failed: {str(e)}")
@@ -39,15 +57,11 @@ class VideoProcessor:
                 "duration": None,
                 "fileSize": None,
                 "processingTime": processing_time,
-                "error": str(e)
+                "error": str(e),
+                "tempDir": job_temp_dir,
             }
-    
-    def _process_video_internal(self, job_id, job_spec, start_time):
 
-        # Create unique job directory
-        job_temp_dir = os.path.join(self.temp_dir, job_id)
-        os.makedirs(job_temp_dir, exist_ok=True)
-
+    def _process_video_internal(self, job_id, job_spec, job_temp_dir, start_time):
         try:
             # Phase 1: Download audio assets first (fast fail)
             logger.info("Downloading audio assets...")
@@ -173,7 +187,7 @@ class VideoProcessor:
             # Return success result with local file path
             processing_time = time.time() - start_time
             file_size = os.path.getsize(local_output)
-            
+
             return {
                 "success": True,
                 "localOutputPath": local_output,
@@ -181,11 +195,11 @@ class VideoProcessor:
                 "duration": video_duration,
                 "fileSize": file_size,
                 "processingTime": processing_time,
-                "error": None
+                "error": None,
+                "tempDir": job_temp_dir,
             }
-        finally:
-            # Always cleanup temp directory
-            self._cleanup_job_dir(job_temp_dir)
+        except Exception as e:
+            raise e
 
     def _download_audio_assets(self, audio_assets, job_temp_dir):
         """Download all audio assets and return lookup dict"""
@@ -368,15 +382,3 @@ class VideoProcessor:
             )
 
         return background_music
-
-    def _cleanup_job_dir(self, job_temp_dir):
-        """Clean up job temporary directory"""
-
-        try:
-            import shutil
-
-            if os.path.exists(job_temp_dir):
-                shutil.rmtree(job_temp_dir)
-                logger.info(f"Cleaned up job temp directory: {job_temp_dir}")
-        except Exception as e:
-            logger.warning(f"Failed to cleanup job temp directory: {str(e)}")

@@ -1,5 +1,4 @@
 from typing import Dict, Any, Optional
-from datetime import datetime, timezone
 
 
 def create_standardized_response(
@@ -16,24 +15,22 @@ def create_standardized_response(
     file_size: Optional[int] = None,
     error: Optional[str] = None,
     job_info: Optional[Dict[str, Any]] = None,
-    metadata: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Create standardized response format for all API endpoints"""
     return {
-        'jobId': job_id,
-        'status': status,
-        'submittedAt': submitted_at,
-        'updatedAt': updated_at,
-        'completedAt': completed_at,
-        'processingTime': processing_time,
-        'output': {
-            'url': output_url,
-            'urlExpiresAt': url_expires_at,
-            's3Uri': s3_uri,
-            'duration': duration,
-            'size': file_size
+        "jobId": job_id,
+        "status": status,
+        "submittedAt": submitted_at,
+        "updatedAt": updated_at,
+        "completedAt": completed_at,
+        "processingTime": processing_time,
+        "output": {
+            "url": output_url,
+            "urlExpiresAt": url_expires_at,
+            "s3Uri": s3_uri,
+            "duration": duration,
+            "size": file_size,
         },
-        'error': error,
-        'jobInfo': job_info or {},
-        'metadata': metadata or {}
+        "error": error,
+        "jobInfo": job_info or {},
     }

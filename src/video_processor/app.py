@@ -74,6 +74,9 @@ def lambda_handler(event, context):
 
 def process_single_job(processor, job_id, job_spec_dict):
     """Process a single job and return result status"""
+
+    video_result = None
+
     try:
         # Validate job spec
         job_spec = validate_job_spec(job_spec_dict)
@@ -113,6 +116,7 @@ def process_single_job(processor, job_id, job_spec_dict):
                 logger.info(
                     f"Job {job_id} completed successfully. Result: {upload_result['outputUrl']}"
                 )
+
                 return {"status": "success"}
             else:
                 # Upload failed
@@ -136,6 +140,7 @@ def process_single_job(processor, job_id, job_spec_dict):
                 )
 
                 logger.error(f"Job {job_id} upload failed: {upload_result['error']}")
+
                 return {"status": "permanent_failure"}
         else:
             # Processing failed
@@ -159,6 +164,7 @@ def process_single_job(processor, job_id, job_spec_dict):
             )
 
             logger.error(f"Job {job_id} processing failed: {video_result['error']}")
+
             return {"status": "permanent_failure"}
 
     except ValueError as e:
@@ -182,6 +188,11 @@ def process_single_job(processor, job_id, job_spec_dict):
             )
             logger.error(f"Job {job_id} permanently failed: {str(e)}")
             return {"status": "permanent_failure"}
+
+    finally:
+        # Single cleanCleanup in procesup location
+        if video_result and video_result.get("tempDir"):
+            processor.video_processor.cleanup_job_dir(video_result["tempDir"])
 
 
 def upload_file(asset_manager_processor, video_result, job_spec):
