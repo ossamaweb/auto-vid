@@ -1,10 +1,18 @@
 import json
 import logging
 import time
+import sys
 import os
 from typing import Optional, Dict, Any
 import requests
 from datetime import datetime, timezone, timedelta
+
+# Add layers path for shared modules
+layers_path = os.path.join(
+    os.path.dirname(__file__), "..", "..", "layers", "auto-vid-shared"
+)
+sys.path.insert(0, os.path.abspath(layers_path))
+from response_formatter import create_standardized_response  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -97,35 +105,34 @@ class WebhookNotifier:
         error: Optional[str] = None,
         duration: Optional[float] = None,
         file_size: Optional[int] = None,
+        submitted_at: Optional[str] = None,
+        updated_at: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Create webhook payload"""
-        payload = {
+        """Create webhook payload using shared response formatter"""
+
+        # Prepare job data for formatter
+        job_data = {
             "jobId": job_id,
             "status": status,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "submittedAt": submitted_at,
+            "updatedAt": updated_at,
+            "completedAt": datetime.now(timezone.utc).isoformat()
+            if status in ["completed", "failed"]
+            else None,
             "processingTime": round(processing_time, 2),
-        }
-
-        from datetime import timedelta
-        
-        # Always include all output fields
-        output_payload = {
-            "url": output_url,
-            "urlExpiresAt": None,
+            "resultUrl": output_url,
             "s3Uri": s3_uri,
             "duration": duration,
-            "size": file_size
+            "size": file_size,
+            "error": error,
         }
-        
-        # Only set expiration if we have a presigned URL
-        if output_url and s3_uri and output_url.startswith('https://'):
-            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
-            output_payload["urlExpiresAt"] = expires_at.isoformat()
-            
-        payload["output"] = output_payload
 
-        if error:
-            payload["error"] = error
+        # Set URL expiration if we have a presigned URL
+        if output_url and s3_uri and output_url.startswith("https://"):
+            expiration_seconds = int(os.getenv("S3_PRESIGNED_URL_EXPIRATION", "86400"))
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                seconds=expiration_seconds
+            )
+            job_data["urlExpiresAt"] = expires_at.isoformat()
 
-        return payload
+        return create_standardized_response(job_data)

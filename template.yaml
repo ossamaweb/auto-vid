@@ -52,9 +52,9 @@ Resources:
         - !Ref AutoVidSharedLayer
       Environment:
         Variables:
-          AUTO_VID_BUCKET: !Ref AutoVidBucket
           JOB_QUEUE_URL: !Ref JobQueue
           JOB_STATUS_TABLE: !Ref JobStatusTable
+          DYNAMODB_JOB_TTL_SECONDS: 604800
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt JobQueue.QueueName
@@ -111,7 +111,6 @@ Resources:
         - !Ref AutoVidSharedLayer
       Environment:
         Variables:
-          AUTO_VID_BUCKET: !Ref AutoVidBucket
           JOB_STATUS_TABLE: !Ref JobStatusTable
       Policies:
         - DynamoDBReadPolicy:

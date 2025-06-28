@@ -50,9 +50,9 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 {
   "jobId": "uuid",
   "status": "submitted",
-  "timestamp": "2024-01-01T12:00:00Z",
   "submittedAt": "2024-01-01T12:00:00Z",
   "updatedAt": "2024-01-01T12:00:00Z",
+  "completedAt": null,
   "processingTime": null,
   "output": {
     "url": null,
@@ -71,9 +71,9 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 {
   "jobId": "uuid",
   "status": "processing",
-  "timestamp": "2024-01-01T12:01:00Z",
   "submittedAt": "2024-01-01T12:00:00Z",
   "updatedAt": "2024-01-01T12:01:00Z",
+  "completedAt": null,
   "processingTime": null,
   "output": {
     "url": null,

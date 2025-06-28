@@ -107,7 +107,9 @@ The webhook will receive a JSON payload with the following structure:
 {
   "jobId": "uuid",
   "status": "completed|failed",
-  "timestamp": "2024-01-01T12:00:00Z",
+  "submittedAt": "2024-01-01T12:00:00Z",
+  "updatedAt": "2024-01-01T12:01:00Z",
+  "completedAt": "2024-01-01T12:05:00Z",
   "processingTime": 120.5,
   "output": {
     "url": "https://bucket.s3.amazonaws.com/outputs/video.mp4?X-Amz-Algorithm=...",
@@ -124,7 +126,9 @@ The webhook will receive a JSON payload with the following structure:
 **Payload Fields:**
 - `jobId` - Unique job identifier
 - `status` - "completed" or "failed"
-- `timestamp` - ISO 8601 completion time (UTC)
+- `submittedAt` - ISO 8601 submission time (UTC)
+- `updatedAt` - ISO 8601 last update time (UTC)
+- `completedAt` - ISO 8601 completion time (UTC)
 - `processingTime` - Duration in seconds (rounded to 2 decimals)
 - `output.url` - Pre-signed download URL (null if generation failed)
 - `output.urlExpiresAt` - ISO 8601 expiration time for download URL (null if no URL)

@@ -192,7 +192,9 @@ When jobs complete, webhooks receive a JSON payload:
 {
   "jobId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
-  "timestamp": "2024-01-15T10:30:45.123456+00:00",
+  "submittedAt": "2024-01-15T10:25:00.000000+00:00",
+  "updatedAt": "2024-01-15T10:30:45.123456+00:00",
+  "completedAt": "2024-01-15T10:30:45.123456+00:00",
   "processingTime": 127.45,
   "output": {
     "url": "https://bucket.s3.amazonaws.com/outputs/my-video.mp4?X-Amz-Algorithm=...",
@@ -416,6 +418,7 @@ SAM handles the entire deployment automatically:
 - `WEBHOOK_MAX_HEADERS_SIZE` - Maximum webhook headers size in bytes (default: 1024)
 - `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size in bytes (default: 1024)
 - `S3_PRESIGNED_URL_EXPIRATION` - Pre-signed URL expiration in seconds (default: 86400 = 24 hours)
+- `DYNAMODB_JOB_TTL_SECONDS` - Controls the TTL (time-to-live, in seconds) for job records in DynamoDB. After this period, jobs are automatically deleted by DynamoDB. Default is 604800 (7 days).
 
 ### Resource Naming
 
