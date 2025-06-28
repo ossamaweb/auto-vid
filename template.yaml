@@ -6,7 +6,7 @@ Resources:
   AutoVidBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "auto-vid-${AWS::StackName}-${AWS::AccountId}"
+      BucketName: !Sub "auto-vid-s3-bucket-${AWS::StackName}-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -18,7 +18,7 @@ Resources:
   AutoVidSharedLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: !Sub "auto-vid-shared-${AWS::StackName}-${AWS::AccountId}"
+      LayerName: !Sub "auto-vid-layer-shared-${AWS::StackName}-${AWS::AccountId}"
       ContentUri: layers/auto-vid-shared/
       CompatibleRuntimes:
         - python3.12
@@ -28,7 +28,7 @@ Resources:
   JobStatusTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "auto-vid-jobs-${AWS::StackName}-${AWS::AccountId}"
+      TableName: !Sub "auto-vid-dynamodb-jobs-${AWS::StackName}-${AWS::AccountId}"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: jobId
@@ -126,7 +126,7 @@ Resources:
   JobQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "auto-vid-jobs-${AWS::StackName}-${AWS::AccountId}"
+      QueueName: !Sub "auto-vid-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
       VisibilityTimeout: 960
 
 Outputs:

@@ -155,11 +155,11 @@ The system supports both managed and custom S3 buckets:
 
 **Managed Bucket (Recommended for beginners):**
 - Automatically created during deployment
-- Bucket name: `auto-vid-{stack-name}-{account-id}`
+- Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
 - Available to Lambda functions via `AUTO_VID_BUCKET` environment variable
 - Used when `destination` is omitted from output configuration
 - Organized with `/assets/` and `/outputs/` prefixes
-- Example bucket name: `auto-vid-mystack-123456789012`
+- Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
 
 **Custom Bucket (Advanced users):**
 - Specify full S3 URI in asset sources and output destination
@@ -180,12 +180,12 @@ The system supports both managed and custom S3 buckets:
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "s3://auto-vid-mystack-123456789012/assets/input.mp4"
+      "source": "s3://auto-vid-s3-bucket-mystack-123456789012/assets/input.mp4"
     },
     "audio": [
       {
         "id": "bgm_track",
-        "source": "s3://auto-vid-mystack-123456789012/assets/background.mp3"
+        "source": "s3://auto-vid-s3-bucket-mystack-123456789012/assets/background.mp3"
       }
     ]
   },

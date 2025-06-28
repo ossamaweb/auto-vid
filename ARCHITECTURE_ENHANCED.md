@@ -7,9 +7,10 @@ The Submit Job Lambda function has been enhanced with production-ready features 
 ## Key Improvements
 
 ### 1. **DynamoDB Job Tracking**
-- **Table**: `auto-vid-jobs-{stack-name}-{account-id}`
+- **Table**: `auto-vid-dynamodb-jobs-{stack-name}-{account-id}`
 - **TTL**: 7 days automatic cleanup
 - **Status Tracking**: submitted → processing → completed/failed/retrying
+- **Full Job Spec Storage**: Complete job specifications stored for debugging and reprocessing
 
 ### 2. **Environment Variables**
 - `JOB_QUEUE_URL`: SQS queue URL from CloudFormation
@@ -49,8 +50,19 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 {
   "jobId": "uuid",
   "status": "submitted",
-  "message": "Job submitted successfully",
-  "submittedAt": "2024-01-01T12:00:00Z"
+  "timestamp": "2024-01-01T12:00:00Z",
+  "submittedAt": "2024-01-01T12:00:00Z",
+  "updatedAt": "2024-01-01T12:00:00Z",
+  "processingTime": null,
+  "output": {
+    "url": null,
+    "urlExpiresAt": null,
+    "s3Uri": null,
+    "duration": null,
+    "size": null
+  },
+  "error": null,
+  "metadata": {}
 }
 ```
 
@@ -59,8 +71,18 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 {
   "jobId": "uuid",
   "status": "processing",
+  "timestamp": "2024-01-01T12:01:00Z",
   "submittedAt": "2024-01-01T12:00:00Z",
   "updatedAt": "2024-01-01T12:01:00Z",
+  "processingTime": null,
+  "output": {
+    "url": null,
+    "urlExpiresAt": null,
+    "s3Uri": null,
+    "duration": null,
+    "size": null
+  },
+  "error": null,
   "metadata": {
     "projectId": "example",
     "outputFilename": "video.mp4"

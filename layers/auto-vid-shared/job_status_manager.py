@@ -20,6 +20,7 @@ class JobStatusManager:
             'status': 'submitted',
             'submittedAt': timestamp,
             'updatedAt': timestamp,
+            'jobSpec': job_spec,
             'ttl': ttl
         }
         

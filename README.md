@@ -419,11 +419,12 @@ SAM handles the entire deployment automatically:
 
 ### Resource Naming
 
-All AWS resources use consistent naming:
+All AWS resources use consistent naming with service type identification:
 
-- S3 Bucket: `auto-vid-{stack-name}-{account-id}`
-- SQS Queue: `auto-vid-jobs-{stack-name}-{account-id}`
-- Lambda Layer: `auto-vid-shared-{stack-name}-{account-id}`
+- S3 Bucket: `auto-vid-s3-bucket-{stack-name}-{account-id}`
+- SQS Queue: `auto-vid-sqs-jobs-{stack-name}-{account-id}`
+- DynamoDB Table: `auto-vid-dynamodb-jobs-{stack-name}-{account-id}`
+- Lambda Layer: `auto-vid-layer-shared-{stack-name}-{account-id}`
 
 ### Managed S3 Bucket
 
@@ -507,7 +508,7 @@ aws cloudformation describe-stacks --stack-name <your-stack-name>
 # If stack deletion fails, manually delete resources:
 
 # Empty S3 bucket first
-aws s3 rm s3://auto-vid-<stack-name>-<account-id> --recursive
+aws s3 rm s3://auto-vid-s3-bucket-<stack-name>-<account-id> --recursive
 
 # Delete ECR images
 aws ecr batch-delete-image \

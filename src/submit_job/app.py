@@ -59,8 +59,19 @@ def lambda_handler(event, context):
             "body": json.dumps({
                 "jobId": job_id,
                 "status": "submitted",
-                "message": "Job submitted successfully",
-                "submittedAt": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "submittedAt": datetime.now(timezone.utc).isoformat(),
+                "updatedAt": datetime.now(timezone.utc).isoformat(),
+                "processingTime": None,
+                "output": {
+                    "url": None,
+                    "urlExpiresAt": None,
+                    "s3Uri": None,
+                    "duration": None,
+                    "size": None
+                },
+                "error": None,
+                "metadata": metadata
             })
         }
         

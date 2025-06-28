@@ -21,10 +21,29 @@ def lambda_handler(event, context):
         if not job_data:
             return create_error_response(404, f"Job {job_id} not found")
         
+        # Standardize response format to match webhook payload
+        standardized_response = {
+            'jobId': job_data['jobId'],
+            'status': job_data['status'],
+            'timestamp': job_data.get('updatedAt', job_data.get('submittedAt')),
+            'submittedAt': job_data.get('submittedAt'),
+            'updatedAt': job_data.get('updatedAt'),
+            'processingTime': job_data.get('processingTime'),
+            'output': {
+                'url': job_data.get('resultUrl'),
+                'urlExpiresAt': None,
+                's3Uri': None,
+                'duration': None,
+                'size': None
+            },
+            'error': job_data.get('error'),
+            'metadata': job_data.get('metadata', {})
+        }
+        
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps(job_data, default=str)
+            'body': json.dumps(standardized_response, default=str)
         }
         
     except Exception as e:
