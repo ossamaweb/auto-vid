@@ -26,6 +26,23 @@ class VideoProcessor:
     def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
         start_time = time.time()
+        
+        try:
+            return self._process_video_internal(job_id, job_spec, start_time)
+        except Exception as e:
+            processing_time = time.time() - start_time
+            logger.error(f"Video processing failed: {str(e)}")
+            return {
+                "success": False,
+                "localOutputPath": None,
+                "outputFilename": None,
+                "duration": None,
+                "fileSize": None,
+                "processingTime": processing_time,
+                "error": str(e)
+            }
+    
+    def _process_video_internal(self, job_id, job_spec, start_time):
 
         # Create unique job directory
         job_temp_dir = os.path.join(self.temp_dir, job_id)
@@ -153,81 +170,19 @@ class VideoProcessor:
             if background_music:
                 background_music.close()
 
-            # Phase 8: Upload result
-            logger.info("Uploading result...")
-            destination = job_spec.output.destination
-            if not destination:
-                # Use default managed bucket
-                bucket_name = os.environ.get("AUTO_VID_BUCKET")
-                if bucket_name:
-                    destination = f"s3://{bucket_name}/outputs/"
-                else:
-                    raise ValueError(
-                        "No output destination specified and no default bucket available"
-                    )
-
-            result_path, bucket, key = self.asset_manager.upload_result(
-                local_output, destination, output_filename
-            )
+            # Return success result with local file path
+            processing_time = time.time() - start_time
+            file_size = os.path.getsize(local_output)
             
-            # Generate presigned URL for S3 uploads only
-            if bucket and key:
-                s3_uri = f"s3://{bucket}/{key}"
-                try:
-                    presigned_url = self.asset_manager.generate_presigned_url(bucket, key)
-                except Exception as e:
-                    logger.warning(f"Failed to generate presigned URL: {e}")
-                    presigned_url = None
-            else:
-                presigned_url = result_path  # Local file path
-                s3_uri = None
-
-            # Send success webhook notification
-            processing_time = time.time() - start_time
-            if job_spec.notifications and job_spec.notifications.webhook:
-                file_size = os.path.getsize(local_output)
-                job_info = getattr(job_spec, 'jobInfo', None)
-                job_info_dict = job_info.model_dump() if job_info else None
-                payload = self.webhook_notifier.create_payload(
-                    job_id=job_id,
-                    status="completed",
-                    processing_time=processing_time,
-                    job_info=job_info_dict,
-                    output_url=presigned_url,
-                    s3_uri=s3_uri,
-                    duration=video_duration,
-                    file_size=file_size,
-                    submitted_at=None,
-                    updated_at=None
-                )
-                self.webhook_notifier.send_notification(
-                    job_spec.notifications.webhook, payload
-                )
-
-            return presigned_url
-
-        except Exception as e:
-            logger.error(f"Video processing failed: {str(e)}")
-
-            # Send failure webhook notification
-            processing_time = time.time() - start_time
-            if job_spec.notifications and job_spec.notifications.webhook:
-                job_info = getattr(job_spec, 'jobInfo', None)
-                job_info_dict = job_info.model_dump() if job_info else None
-                payload = self.webhook_notifier.create_payload(
-                    job_id=job_id,
-                    status="failed",
-                    processing_time=processing_time,
-                    job_info=job_info_dict,
-                    error=str(e),
-                    submitted_at=None,
-                    updated_at=None
-                )
-                self.webhook_notifier.send_notification(
-                    job_spec.notifications.webhook, payload
-                )
-
-            raise
+            return {
+                "success": True,
+                "localOutputPath": local_output,
+                "outputFilename": output_filename,
+                "duration": video_duration,
+                "fileSize": file_size,
+                "processingTime": processing_time,
+                "error": None
+            }
         finally:
             # Always cleanup temp directory
             self._cleanup_job_dir(job_temp_dir)

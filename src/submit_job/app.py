@@ -34,13 +34,13 @@ def lambda_handler(event, context):
 
         # Generate job ID and extract job info
         job_id = str(uuid.uuid4())
-        job_info = extract_job_info(job_spec_dict)
+        job_info = job_spec_dict.get("jobInfo")
 
         # Initialize job manager
         job_manager = JobManager()
 
         # Create job record in DynamoDB and get standardized response
-        response_data = job_manager.create_job(job_id, job_spec_dict, job_info)
+        response_data = job_manager.create_job(job_id, job_info)
 
         # Send job to SQS queue
         queue_url = os.environ["JOB_QUEUE_URL"]
@@ -76,22 +76,3 @@ def create_error_response(status_code: int, error_message: str) -> Dict[str, Any
             }
         ),
     }
-
-
-def extract_job_info(job_spec: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract job info from job spec for tracking"""
-    job_info = {}
-
-    if "jobInfo" in job_spec:
-        spec_job_info = job_spec["jobInfo"]
-        if "projectId" in spec_job_info:
-            job_info["projectId"] = spec_job_info["projectId"]
-        if "title" in spec_job_info:
-            job_info["title"] = spec_job_info["title"]
-        if "tags" in spec_job_info:
-            job_info["tags"] = spec_job_info["tags"]
-
-    if "output" in job_spec and "filename" in job_spec["output"]:
-        job_info["outputFilename"] = job_spec["output"]["filename"]
-
-    return job_info

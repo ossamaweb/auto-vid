@@ -14,7 +14,6 @@ class JobManager:
     def create_job(
         self,
         job_id: str,
-        job_spec: Dict[Any, Any],
         job_info: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create a new job record with submitted status and return standardized response"""

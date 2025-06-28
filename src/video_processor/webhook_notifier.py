@@ -95,6 +95,7 @@ class WebhookNotifier:
         processing_time: float,
         job_info: Optional[Dict[str, Any]] = None,
         output_url: Optional[str] = None,
+        url_expires_at: Optional[str] = None,
         s3_uri: Optional[str] = None,
         error: Optional[str] = None,
         duration: Optional[float] = None,
@@ -104,12 +105,6 @@ class WebhookNotifier:
     ) -> Dict[str, Any]:
         """Create webhook payload using shared response formatter"""
         completed_at = datetime.now(timezone.utc).isoformat() if status in ["completed", "failed"] else None
-        url_expires_at = None
-        
-        if output_url and s3_uri and output_url.startswith("https://"):
-            expiration_seconds = int(os.getenv("S3_PRESIGNED_URL_EXPIRATION", "86400"))
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
-            url_expires_at = expires_at.isoformat()
 
         return create_standardized_response(
             job_id=job_id,
