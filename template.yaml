@@ -56,6 +56,10 @@ Resources:
       Environment:
         Variables:
           AUTO_VID_BUCKET: !Ref AutoVidBucket
+          AWS_REGION: !Ref AWS::Region
+          WEBHOOK_MAX_HEADERS_SIZE: 1024
+          WEBHOOK_MAX_METADATA_SIZE: 1024
+          S3_PRESIGNED_URL_EXPIRATION: 86400
       Policies:
         - AmazonPollyFullAccess
         - S3CrudPolicy:
@@ -66,7 +70,7 @@ Resources:
           Properties:
             Queue: !GetAtt JobQueue.Arn
     Metadata:
-      Dockerfile: Dockerfile
+      Dockerfile: Dockerfile.videoprocessor
       DockerContext: .
       DockerTag: latest
 

@@ -1,8 +1,10 @@
 import os
 import logging
+import time
 from moviepy import VideoFileClip, AudioFileClip, CompositeAudioClip, afx
 from asset_manager import AssetManager
 from tts_generator import TTSGenerator
+from webhook_notifier import WebhookNotifier
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,7 @@ class VideoProcessor:
     def __init__(self, temp_dir=None):
         self.asset_manager = AssetManager()
         self.tts_generator = TTSGenerator()
+        self.webhook_notifier = WebhookNotifier()
         self.temp_dir = temp_dir or DEFAULT_TEMP_DIR
 
         # Ensure temp directory exists
@@ -22,6 +25,7 @@ class VideoProcessor:
 
     def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
+        start_time = time.time()
 
         # Create unique job directory
         job_temp_dir = os.path.join(self.temp_dir, job_id)
@@ -97,10 +101,11 @@ class VideoProcessor:
             logger.info("Combining audio layers...")
             all_audio = [background_music] if background_music else []
             all_audio.extend(audio_clips)
-            
+
             if not all_audio:
                 # No audio clips at all - create silent audio matching video duration
                 from moviepy import AudioClip
+
                 final_audio = AudioClip(lambda t: [0, 0], duration=video_duration)
             else:
                 final_audio = CompositeAudioClip(all_audio)
@@ -139,6 +144,15 @@ class VideoProcessor:
                 logger=None if is_lambda else "bar",
             )
 
+            # Cleanup MoviePy objects before upload to free memory
+            video.close()
+            final_video.close()
+            final_audio.close()
+            for clip in audio_clips:
+                clip.close()
+            if background_music:
+                background_music.close()
+
             # Phase 8: Upload result
             logger.info("Uploading result...")
             destination = job_spec.output.destination
@@ -152,23 +166,57 @@ class VideoProcessor:
                         "No output destination specified and no default bucket available"
                     )
 
-            result_url = self.asset_manager.upload_result(
+            result_path, bucket, key = self.asset_manager.upload_result(
                 local_output, destination, output_filename
             )
+            
+            # Generate presigned URL for S3 uploads only
+            if bucket and key:
+                s3_uri = f"s3://{bucket}/{key}"
+                try:
+                    presigned_url = self.asset_manager.generate_presigned_url(bucket, key)
+                except Exception as e:
+                    logger.warning(f"Failed to generate presigned URL: {e}")
+                    presigned_url = None
+            else:
+                presigned_url = result_path  # Local file path
+                s3_uri = None
 
-            # Cleanup
-            video.close()
-            final_video.close()
-            final_audio.close()
-            for clip in audio_clips:
-                clip.close()
-            if background_music:
-                background_music.close()
+            # Send success webhook notification
+            processing_time = time.time() - start_time
+            if job_spec.notifications and job_spec.notifications.webhook:
+                file_size = os.path.getsize(local_output)
+                payload = self.webhook_notifier.create_payload(
+                    job_id=job_id,
+                    status="completed",
+                    processing_time=processing_time,
+                    output_url=presigned_url,
+                    s3_uri=s3_uri,
+                    duration=video_duration,
+                    file_size=file_size,
+                )
+                self.webhook_notifier.send_notification(
+                    job_spec.notifications.webhook, payload
+                )
 
-            return result_url
+            return presigned_url
 
         except Exception as e:
             logger.error(f"Video processing failed: {str(e)}")
+
+            # Send failure webhook notification
+            processing_time = time.time() - start_time
+            if job_spec.notifications and job_spec.notifications.webhook:
+                payload = self.webhook_notifier.create_payload(
+                    job_id=job_id,
+                    status="failed",
+                    processing_time=processing_time,
+                    error=str(e),
+                )
+                self.webhook_notifier.send_notification(
+                    job_spec.notifications.webhook, payload
+                )
+
             raise
         finally:
             # Always cleanup temp directory

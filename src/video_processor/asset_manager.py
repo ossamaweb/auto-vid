@@ -13,13 +13,24 @@ logger = logging.getLogger(__name__)
 class AssetManager:
     def __init__(self):
         """Initialize AssetManager with S3 client and retry configuration"""
+        region = os.getenv('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client(
             "s3",
+            region_name=region,
             config=Config(
-                retries={"max_attempts": 3, "mode": "adaptive"}, max_pool_connections=50
+                retries={"max_attempts": 3, "mode": "adaptive"}, 
+                max_pool_connections=50,
+                signature_version='s3v4'
             ),
         )
         self.s3_uri_pattern = re.compile(r"^s3://([^/]+)/(.+)$")
+        self.retry_attempts = 3
+        self.timeout = 30
+        self.backoff_base = 2
+        
+        # HTTP error categorization
+        self.permanent_http_errors = {400, 401, 403, 404, 405, 410, 422}
+        self.temporary_http_errors = {408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524}
 
     def download_asset(self, source_uri, temp_dir):
         """Download asset from S3, HTTP/HTTPS, or copy local file"""
@@ -47,7 +58,7 @@ class AssetManager:
             self.s3_client.upload_file(local_path, bucket, key)
             result_url = f"s3://{bucket}/{key}"
             logger.info(f"Successfully uploaded to {result_url}")
-            return result_url
+            return result_url, bucket, key
         except ClientError as e:
             logger.error(f"Failed to upload to S3: {e}")
             raise
@@ -66,7 +77,7 @@ class AssetManager:
             logger.info(f"Copying {local_path} to {final_path}")
             shutil.copy2(local_path, final_path)
             logger.info(f"Successfully saved to {final_path}")
-            return final_path
+            return final_path, None, None
         except Exception as e:
             logger.error(f"Failed to save to local destination: {e}")
             raise
@@ -92,7 +103,7 @@ class AssetManager:
         filename = os.path.basename(key)
         local_path = os.path.join(temp_dir, filename)
 
-        for attempt in range(3):
+        for attempt in range(self.retry_attempts):
             try:
                 logger.info(
                     f"Downloading s3://{bucket}/{key} to {local_path} (attempt {attempt + 1})"
@@ -110,9 +121,9 @@ class AssetManager:
                     raise PermissionError(f"Access denied to S3 object: {s3_uri}")
                 else:
                     logger.warning(f"S3 download attempt {attempt + 1} failed: {e}")
-                    if attempt == 2:  # Last attempt
+                    if attempt == self.retry_attempts - 1:  # Last attempt
                         raise
-                    time.sleep(2**attempt)  # Exponential backoff
+                    time.sleep(self.backoff_base**attempt)  # Exponential backoff
 
     def _download_from_url(self, url, temp_dir):
         """Download file from HTTP/HTTPS URL with retry logic"""
@@ -124,23 +135,35 @@ class AssetManager:
         )
         local_path = os.path.join(temp_dir, filename)
 
-        for attempt in range(3):
+        for attempt in range(self.retry_attempts):
             try:
                 logger.info(f"Downloading {url} (attempt {attempt + 1})")
-                response = requests.get(url, stream=True, timeout=30)
+                response = requests.get(url, stream=True, timeout=self.timeout)
+                
+                if response.status_code in self.permanent_http_errors:
+                    raise requests.exceptions.HTTPError(f"HTTP {response.status_code} error downloading {url}")
+                
                 response.raise_for_status()
 
                 with open(local_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=65536):
                         f.write(chunk)
 
-                logger.info(f"Downloaded -> {filename}")
+                logger.info(f"Successfully downloaded {url}")
                 return local_path
-            except requests.RequestException as e:
-                logger.warning(f"Download attempt {attempt + 1} failed: {e}")
-                if attempt == 2:
+            except requests.exceptions.HTTPError as e:
+                if any(str(code) in str(e) for code in self.permanent_http_errors):
                     raise
-                time.sleep(2**attempt)
+                logger.warning(f"URL download attempt {attempt + 1} failed with HTTP error: {e}")
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, 
+                   requests.exceptions.SSLError) as e:
+                logger.warning(f"URL download attempt {attempt + 1} network error: {e}")
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"URL download attempt {attempt + 1} failed: {e}")
+                
+            if attempt == self.retry_attempts - 1:
+                raise
+            time.sleep(self.backoff_base**attempt)
 
     def _copy_local_file(self, source_path, temp_dir):
         """Copy local file to temp directory"""
@@ -158,4 +181,20 @@ class AssetManager:
             return local_path
         except Exception as e:
             logger.error(f"Failed to copy local file: {e}")
+            raise
+    
+    def generate_presigned_url(self, bucket, key, expiration_seconds=None):
+        """Generate pre-signed URL for S3 object"""
+        if expiration_seconds is None:
+            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))  # 24 hours default
+        
+        try:
+            presigned_url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket, 'Key': key},
+                ExpiresIn=expiration_seconds
+            )
+            return presigned_url
+        except ClientError as e:
+            logger.error(f"Failed to generate presigned URL: {e}")
             raise
