@@ -1,28 +1,44 @@
 import json
-import boto3
+from datetime import datetime, timezone
+from typing import Dict, Any
+
+from job_status_manager import JobStatusManager
+
 
 def lambda_handler(event, context):
+    """Get job status from DynamoDB"""
     try:
+        # Validate path parameters
+        if not event.get('pathParameters') or not event['pathParameters'].get('jobId'):
+            return create_error_response(400, "Missing jobId in path parameters")
+        
         job_id = event['pathParameters']['jobId']
         
-        # In a real implementation, you would query a database
-        # For now, return a mock status
-        status_data = {
-            'jobId': job_id,
-            'status': 'processing',
-            'progress': 75,
-            'message': 'Video processing in progress'
-        }
+        # Get job status from DynamoDB
+        job_manager = JobStatusManager()
+        job_data = job_manager.get_job(job_id)
+        
+        if not job_data:
+            return create_error_response(404, f"Job {job_id} not found")
         
         return {
             'statusCode': 200,
-            'body': json.dumps(status_data)
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(job_data, default=str)
         }
         
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e)
-            })
-        }
+        print(f"Error getting job status: {str(e)}")
+        return create_error_response(500, "Internal server error")
+
+
+def create_error_response(status_code: int, error_message: str) -> Dict[str, Any]:
+    """Create standardized error response"""
+    return {
+        "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({
+            "error": error_message,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    }

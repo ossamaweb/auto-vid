@@ -1,0 +1,3 @@
+{
+  "body": "{\"jobSpec\": {\"assets\": {\"video\": {\"id\": \"main\", \"source\": \"s3://test-bucket/video.mp4\"}, \"audio\": [{\"id\": \"music\", \"source\": \"s3://test-bucket/music.mp3\"}]}, \"backgroundMusic\": {\"playlist\": [\"music\"], \"volume\": 0.3}, \"timeline\": [], \"output\": {\"filename\": \"test-output.mp4\"}}}"
+}

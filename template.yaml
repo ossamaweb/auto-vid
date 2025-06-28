@@ -25,6 +25,21 @@ Resources:
     Metadata:
       BuildMethod: python3.12
 
+  JobStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "auto-vid-jobs-${AWS::StackName}-${AWS::AccountId}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: jobId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: jobId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
   SubmitJobFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -38,6 +53,13 @@ Resources:
       Environment:
         Variables:
           AUTO_VID_BUCKET: !Ref AutoVidBucket
+          JOB_QUEUE_URL: !Ref JobQueue
+          JOB_STATUS_TABLE: !Ref JobStatusTable
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt JobQueue.QueueName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobStatusTable
       Events:
         SubmitJob:
           Type: Api
@@ -57,6 +79,7 @@ Resources:
         Variables:
           AUTO_VID_BUCKET: !Ref AutoVidBucket
           AWS_REGION: !Ref AWS::Region
+          JOB_STATUS_TABLE: !Ref JobStatusTable
           WEBHOOK_MAX_HEADERS_SIZE: 1024
           WEBHOOK_MAX_METADATA_SIZE: 1024
           S3_PRESIGNED_URL_EXPIRATION: 86400
@@ -64,6 +87,8 @@ Resources:
         - AmazonPollyFullAccess
         - S3CrudPolicy:
             BucketName: !Ref AutoVidBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref JobStatusTable
       Events:
         ProcessJob:
           Type: SQS
@@ -87,6 +112,10 @@ Resources:
       Environment:
         Variables:
           AUTO_VID_BUCKET: !Ref AutoVidBucket
+          JOB_STATUS_TABLE: !Ref JobStatusTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref JobStatusTable
       Events:
         GetStatus:
           Type: Api
@@ -114,3 +143,15 @@ Outputs:
     Value: !Ref AutoVidBucket
     Export:
       Name: !Sub "${AWS::StackName}-AutoVidBucket"
+
+  JobStatusTable:
+    Description: "DynamoDB table for job status tracking"
+    Value: !Ref JobStatusTable
+    Export:
+      Name: !Sub "${AWS::StackName}-JobStatusTable"
+
+  JobQueue:
+    Description: "SQS queue for video processing jobs"
+    Value: !Ref JobQueue
+    Export:
+      Name: !Sub "${AWS::StackName}-JobQueue"

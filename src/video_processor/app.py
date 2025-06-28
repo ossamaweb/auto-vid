@@ -14,6 +14,7 @@ layers_path = os.path.join(
 )
 sys.path.insert(0, os.path.abspath(layers_path))
 from job_validator import validate_job_spec  # noqa: E402
+from job_status_manager import JobStatusManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ def lambda_handler(event, context):
     transient_failures = []
     permanent_failures = []
     successful_jobs = []
+    job_manager = JobStatusManager()
 
     # Parse SQS message
     for record in event["Records"]:
@@ -54,6 +56,9 @@ def lambda_handler(event, context):
         job_spec_dict = message_body["jobSpec"]
 
         try:
+            # Update status to processing
+            job_manager.update_status(job_id, "processing")
+            
             # Validate job spec (permanent failure)
             job_spec = validate_job_spec(job_spec_dict)
 
@@ -61,21 +66,33 @@ def lambda_handler(event, context):
             processor = VideoProcessor()
             result_url = processor.process_video_job(job_id, job_spec)
 
+            # Update status to completed
+            from datetime import datetime, timezone
+            job_manager.update_status(
+                job_id, 
+                "completed", 
+                resultUrl=result_url,
+                completedAt=datetime.now(timezone.utc).isoformat()
+            )
+
             logger.info(f"Job {job_id} completed successfully. Result: {result_url}")
             successful_jobs.append(job_id)
 
         except ValueError as e:
             # Permanent error (validation failure) - don't retry
+            job_manager.update_status(job_id, "failed", error=str(e))
             logger.error(f"Job {job_id} permanently failed (validation): {str(e)}")
             permanent_failures.append(job_id)
 
         except Exception as e:
             # Check if error is transient
             if is_transient_error(e):
+                job_manager.update_status(job_id, "retrying", error=str(e))
                 logger.warning(f"Job {job_id} failed with transient error: {str(e)}")
                 transient_failures.append(job_id)
             else:
                 # Permanent error - don't retry
+                job_manager.update_status(job_id, "failed", error=str(e))
                 logger.error(f"Job {job_id} permanently failed: {str(e)}")
                 permanent_failures.append(job_id)
 
