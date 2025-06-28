@@ -116,10 +116,9 @@
     }
   ],
   "output": {
-    "destination": "./dist/meryl-streep",
     "filename": "ranking-meryl-streep-most-expensive-movies.mp4",
     "encoding": {
-      "preset": "ultrafast"
+      "preset": "medium"
     }
   },
   "notifications": {
