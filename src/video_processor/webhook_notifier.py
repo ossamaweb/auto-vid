@@ -1,10 +1,9 @@
-import json
 import logging
 import time
-import os
 from typing import Optional, Dict, Any
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+from response_formatter import create_standardized_response
 
 logger = logging.getLogger(__name__)
 
@@ -92,40 +91,35 @@ class WebhookNotifier:
         job_id: str,
         status: str,
         processing_time: float,
+        job_info: Optional[Dict[str, Any]] = None,
         output_url: Optional[str] = None,
+        url_expires_at: Optional[str] = None,
         s3_uri: Optional[str] = None,
         error: Optional[str] = None,
         duration: Optional[float] = None,
         file_size: Optional[int] = None,
+        submitted_at: Optional[str] = None,
+        updated_at: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Create webhook payload"""
-        payload = {
-            "jobId": job_id,
-            "status": status,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "processingTime": round(processing_time, 2),
-        }
+        """Create webhook payload using shared response formatter"""
+        completed_at = (
+            datetime.now(timezone.utc).isoformat()
+            if status in ["completed", "failed"]
+            else None
+        )
 
-        from datetime import timedelta
-        
-        # Always include all output fields
-        output_payload = {
-            "url": output_url,
-            "urlExpiresAt": None,
-            "s3Uri": s3_uri,
-            "duration": duration,
-            "size": file_size
-        }
-        
-        # Only set expiration if we have a presigned URL
-        if output_url and s3_uri and output_url.startswith('https://'):
-            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
-            output_payload["urlExpiresAt"] = expires_at.isoformat()
-            
-        payload["output"] = output_payload
-
-        if error:
-            payload["error"] = error
-
-        return payload
+        return create_standardized_response(
+            job_id=job_id,
+            status=status,
+            submitted_at=submitted_at,
+            updated_at=updated_at,
+            completed_at=completed_at,
+            processing_time=round(processing_time, 2),
+            output_url=output_url,
+            url_expires_at=url_expires_at,
+            s3_uri=s3_uri,
+            duration=duration,
+            file_size=file_size,
+            error=error,
+            job_info=job_info,
+        )

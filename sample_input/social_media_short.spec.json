@@ -1,11 +1,8 @@
 {
-  "metadata": {
+  "jobInfo": {
     "projectId": "ranking_shorts",
     "title": "Ranking Meryl Streep Most Expensive Movies",
-    "tags": [
-      "ranking shorts",
-      "meryl streep"
-    ]
+    "tags": ["ranking shorts", "meryl streep"]
   },
   "assets": {
     "video": {
@@ -28,9 +25,7 @@
     ]
   },
   "backgroundMusic": {
-    "playlist": [
-      "bgm_track"
-    ],
+    "playlist": ["bgm_track"],
     "volume": 0.2
   },
   "timeline": [
@@ -132,8 +127,8 @@
       "metadata": {
         "data1": "string",
         "data2": 1,
-         "data3": true,
-          "data4": 5.66
+        "data3": true,
+        "data4": 5.66
       }
     }
   }

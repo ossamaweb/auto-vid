@@ -6,10 +6,19 @@ import os
 from polly_constants import LanguageCode, VoiceId
 
 
-class Metadata(BaseModel):
-    projectId: Optional[str] = None
-    title: Optional[str] = None
-    tags: Optional[List[str]] = None
+class JobInfo(BaseModel):
+    projectId: Optional[str] = Field(default=None, max_length=100)
+    title: Optional[str] = Field(default=None, max_length=200)
+    tags: Optional[List[str]] = Field(default=None, max_length=10)
+    
+    @field_validator('tags')
+    @classmethod
+    def validate_tag_lengths(cls, v):
+        if v:
+            for tag in v:
+                if len(tag) > 50:
+                    raise ValueError("Each tag must be 50 characters or less")
+        return v
 
 
 class VideoAsset(BaseModel):
@@ -111,7 +120,7 @@ class Output(BaseModel):
 
 
 class JobSpec(BaseModel):
-    metadata: Optional[Metadata] = None
+    jobInfo: Optional[JobInfo] = None
     assets: Assets
     backgroundMusic: Optional[BackgroundMusic] = None
     timeline: List[TimelineEvent]

@@ -23,6 +23,18 @@ class VideoProcessor:
         # Ensure temp directory exists
         os.makedirs(self.temp_dir, exist_ok=True)
 
+    def cleanup_job_dir(self, job_temp_dir):
+        """Clean up job temporary directory"""
+
+        try:
+            import shutil
+
+            if os.path.exists(job_temp_dir):
+                shutil.rmtree(job_temp_dir)
+                logger.info(f"Cleaned up job temp directory: {job_temp_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup job temp directory: {str(e)}")
+
     def process_video_job(self, job_id, job_spec):
         """Process a complete video job from job specification"""
         start_time = time.time()
@@ -31,6 +43,25 @@ class VideoProcessor:
         job_temp_dir = os.path.join(self.temp_dir, job_id)
         os.makedirs(job_temp_dir, exist_ok=True)
 
+        try:
+            return self._process_video_internal(
+                job_id, job_spec, job_temp_dir, start_time
+            )
+        except Exception as e:
+            processing_time = time.time() - start_time
+            logger.error(f"Video processing failed: {str(e)}")
+            return {
+                "success": False,
+                "localOutputPath": None,
+                "outputFilename": None,
+                "duration": None,
+                "fileSize": None,
+                "processingTime": processing_time,
+                "error": str(e),
+                "tempDir": job_temp_dir,
+            }
+
+    def _process_video_internal(self, job_id, job_spec, job_temp_dir, start_time):
         try:
             # Phase 1: Download audio assets first (fast fail)
             logger.info("Downloading audio assets...")
@@ -153,74 +184,22 @@ class VideoProcessor:
             if background_music:
                 background_music.close()
 
-            # Phase 8: Upload result
-            logger.info("Uploading result...")
-            destination = job_spec.output.destination
-            if not destination:
-                # Use default managed bucket
-                bucket_name = os.environ.get("AUTO_VID_BUCKET")
-                if bucket_name:
-                    destination = f"s3://{bucket_name}/outputs/"
-                else:
-                    raise ValueError(
-                        "No output destination specified and no default bucket available"
-                    )
-
-            result_path, bucket, key = self.asset_manager.upload_result(
-                local_output, destination, output_filename
-            )
-            
-            # Generate presigned URL for S3 uploads only
-            if bucket and key:
-                s3_uri = f"s3://{bucket}/{key}"
-                try:
-                    presigned_url = self.asset_manager.generate_presigned_url(bucket, key)
-                except Exception as e:
-                    logger.warning(f"Failed to generate presigned URL: {e}")
-                    presigned_url = None
-            else:
-                presigned_url = result_path  # Local file path
-                s3_uri = None
-
-            # Send success webhook notification
+            # Return success result with local file path
             processing_time = time.time() - start_time
-            if job_spec.notifications and job_spec.notifications.webhook:
-                file_size = os.path.getsize(local_output)
-                payload = self.webhook_notifier.create_payload(
-                    job_id=job_id,
-                    status="completed",
-                    processing_time=processing_time,
-                    output_url=presigned_url,
-                    s3_uri=s3_uri,
-                    duration=video_duration,
-                    file_size=file_size,
-                )
-                self.webhook_notifier.send_notification(
-                    job_spec.notifications.webhook, payload
-                )
+            file_size = os.path.getsize(local_output)
 
-            return presigned_url
-
+            return {
+                "success": True,
+                "localOutputPath": local_output,
+                "outputFilename": output_filename,
+                "duration": video_duration,
+                "fileSize": file_size,
+                "processingTime": processing_time,
+                "error": None,
+                "tempDir": job_temp_dir,
+            }
         except Exception as e:
-            logger.error(f"Video processing failed: {str(e)}")
-
-            # Send failure webhook notification
-            processing_time = time.time() - start_time
-            if job_spec.notifications and job_spec.notifications.webhook:
-                payload = self.webhook_notifier.create_payload(
-                    job_id=job_id,
-                    status="failed",
-                    processing_time=processing_time,
-                    error=str(e),
-                )
-                self.webhook_notifier.send_notification(
-                    job_spec.notifications.webhook, payload
-                )
-
-            raise
-        finally:
-            # Always cleanup temp directory
-            self._cleanup_job_dir(job_temp_dir)
+            raise e
 
     def _download_audio_assets(self, audio_assets, job_temp_dir):
         """Download all audio assets and return lookup dict"""
@@ -403,15 +382,3 @@ class VideoProcessor:
             )
 
         return background_music
-
-    def _cleanup_job_dir(self, job_temp_dir):
-        """Clean up job temporary directory"""
-
-        try:
-            import shutil
-
-            if os.path.exists(job_temp_dir):
-                shutil.rmtree(job_temp_dir)
-                logger.info(f"Cleaned up job temp directory: {job_temp_dir}")
-        except Exception as e:
-            logger.warning(f"Failed to cleanup job temp directory: {str(e)}")

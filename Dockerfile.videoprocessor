@@ -15,7 +15,7 @@ RUN cd /tmp && \
 
 # Install Python dependencies and copy app code for cleanup
 COPY requirements.txt /tmp/
-COPY layers/auto-vid-shared/ /tmp/app-code/
+COPY layers/shared/ /tmp/app-code/
 COPY src/video_processor/ /tmp/app-code/
 RUN pip install --no-cache-dir --target /tmp/python-packages -r /tmp/requirements.txt && \
     # Safe cleanup only

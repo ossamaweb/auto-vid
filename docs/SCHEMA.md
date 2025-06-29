@@ -6,7 +6,7 @@ This document outlines the schema for the "Video Job Specification" JSON file. T
 
 The JSON object has six main keys:
 
-- `metadata`: Information _about_ the project for tracking and organization.
+- `jobInfo`: Information _about_ the project for tracking and organization.
 - `assets`: A library of all media files (video, audio) to be used.
 - `backgroundMusic`: Configuration for continuous background audio throughout the video.
 - `timeline`: A chronological sequence of timed events that happen _on_ the video.
@@ -17,13 +17,13 @@ The JSON object has six main keys:
 
 ### Section Breakdown
 
-#### 1. `metadata` (Object, Optional)
+#### 1. `jobInfo` (Object, Optional)
 
 Contains general information about the video job.
 
-- `"projectId"` (String, Optional): A unique identifier for the job or project.
-- `"title"` (String, Optional): The human-readable title of the video.
-- `"tags"` (Array of Strings, Optional): A list of tags for searching and categorization.
+- `"projectId"` (String, Optional, Max 100 chars): A unique identifier for the job or project.
+- `"title"` (String, Optional, Max 200 chars): The human-readable title of the video.
+- `"tags"` (Array of Strings, Optional, Max 10 tags, 50 chars each): A list of tags for searching and categorization.
 
 #### 2. `assets` (Object, Required)
 
@@ -103,11 +103,14 @@ Defines notification settings for job completion.
 
 **Webhook Payload:**
 The webhook will receive a JSON payload with the following structure:
+
 ```json
 {
   "jobId": "uuid",
   "status": "completed|failed",
-  "timestamp": "2024-01-01T12:00:00Z",
+  "submittedAt": "2024-01-01T12:00:00Z",
+  "updatedAt": "2024-01-01T12:01:00Z",
+  "completedAt": "2024-01-01T12:05:00Z",
   "processingTime": 120.5,
   "output": {
     "url": "https://bucket.s3.amazonaws.com/outputs/video.mp4?X-Amz-Algorithm=...",
@@ -122,9 +125,12 @@ The webhook will receive a JSON payload with the following structure:
 ```
 
 **Payload Fields:**
+
 - `jobId` - Unique job identifier
 - `status` - "completed" or "failed"
-- `timestamp` - ISO 8601 completion time (UTC)
+- `submittedAt` - ISO 8601 submission time (UTC)
+- `updatedAt` - ISO 8601 last update time (UTC)
+- `completedAt` - ISO 8601 completion time (UTC)
 - `processingTime` - Duration in seconds (rounded to 2 decimals)
 - `output.url` - Pre-signed download URL (null if generation failed)
 - `output.urlExpiresAt` - ISO 8601 expiration time for download URL (null if no URL)
@@ -137,13 +143,14 @@ The webhook will receive a JSON payload with the following structure:
 **Note:** The `output` section is always present with all fields included. On failure or when unavailable, fields are set to `null`.
 
 **URL Behavior:**
+
 - `url` - Pre-signed download URL (expires in 24 hours by default)
 - `urlExpiresAt` - Only present when `url` is a valid pre-signed URL
 - `s3Uri` - Always present for S3 uploads, `null` for local files
 - If pre-signed URL generation fails, `url` and `urlExpiresAt` will be `null`
-```
 
 **Retry Logic:**
+
 - 3 automatic retry attempts with exponential backoff (1s, 2s, 4s)
 - 4xx errors are not retried (client configuration issues)
 - 5xx errors and network timeouts are retried
@@ -154,14 +161,16 @@ The webhook will receive a JSON payload with the following structure:
 The system supports both managed and custom S3 buckets:
 
 **Managed Bucket (Recommended for beginners):**
+
 - Automatically created during deployment
-- Bucket name: `auto-vid-{stack-name}-{account-id}`
-- Available to Lambda functions via `AUTO_VID_BUCKET` environment variable
+- Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
+- Available to Lambda functions via `S3_BUCKET_NAME` environment variable
 - Used when `destination` is omitted from output configuration
 - Organized with `/assets/` and `/outputs/` prefixes
-- Example bucket name: `auto-vid-mystack-123456789012`
+- Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
 
 **Custom Bucket (Advanced users):**
+
 - Specify full S3 URI in asset sources and output destination
 - Requires proper IAM permissions for the Lambda functions
 - Example: `s3://my-custom-bucket/my-folder/`
@@ -173,19 +182,19 @@ The system supports both managed and custom S3 buckets:
 ```json
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
-  "metadata": {
+  "jobInfo": {
     "projectId": "simple_example",
     "title": "Background Music Only Example"
   },
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "s3://auto-vid-mystack-123456789012/assets/input.mp4"
+      "source": "s3://auto-vid-s3-bucket-mystack-123456789012/assets/input.mp4"
     },
     "audio": [
       {
         "id": "bgm_track",
-        "source": "s3://auto-vid-mystack-123456789012/assets/background.mp3"
+        "source": "s3://auto-vid-s3-bucket-mystack-123456789012/assets/background.mp3"
       }
     ]
   },
@@ -217,7 +226,7 @@ The system supports both managed and custom S3 buckets:
 ```json
 {
   "$schema": "https://your-domain.com/schemas/video-job-v2.json",
-  "metadata": {
+  "jobInfo": {
     "projectId": "project_name",
     "title": "My Automated Video v1",
     "tags": ["automated"]
