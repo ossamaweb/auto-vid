@@ -119,6 +119,14 @@ The webhook will receive a JSON payload with the following structure:
     "duration": 45.2,
     "size": 15728640
   },
+  "jobInfo": {
+    "title": "Job title",
+    "projectId": "projectId",
+    "tags": [
+        "tag a",
+        "tag b"
+    ]
+  },
   "error": null,
   "metadata": {...}
 }
@@ -137,6 +145,7 @@ The webhook will receive a JSON payload with the following structure:
 - `output.s3Uri` - Internal S3 URI reference (null for local files)
 - `output.duration` - Video length in seconds (null on failure)
 - `output.size` - File size in bytes (null on failure)
+- `jobInfo` - Original job information (title, projectId, tags)
 - `error` - Error message (failure only)
 - `metadata` - Custom user-provided metadata
 
@@ -166,7 +175,7 @@ The system supports both managed and custom S3 buckets:
 - Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
 - Available to Lambda functions via `S3_BUCKET_NAME` environment variable
 - Used when `destination` is omitted from output configuration
-- Organized with `/assets/` and `/outputs/` prefixes
+- Organized with `/assets/`, `inputs` and `/outputs/` prefixes
 - Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
 
 **Custom Bucket (Advanced users):**

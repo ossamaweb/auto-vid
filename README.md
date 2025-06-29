@@ -186,7 +186,8 @@ aws cloudformation describe-stacks --stack-name <your-stack-name>
 
 ## 📚 Documentation
 
-- **[Complete Job Schema](docs/SCHEMA.md)** - Full API specification
+- **[API Reference](docs/API.md)** - REST API endpoints and responses
+- **[Complete Job Schema](docs/SCHEMA.md)** - Job specification format
 - **[Business Use Cases](docs/BUSINESS.md)** - Real-world applications
 - **[Architecture Details](docs/ARCHITECTURE.md)** - Technical deep dive
 - **[Advanced Examples](docs/EXAMPLES.md)** - Complex job specifications
