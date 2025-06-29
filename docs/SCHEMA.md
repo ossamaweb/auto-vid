@@ -6,7 +6,7 @@ This document outlines the schema for the "Video Job Specification" JSON file. T
 
 The JSON object has six main keys:
 
-- `metadata`: Information _about_ the project for tracking and organization.
+- `jobInfo`: Information _about_ the project for tracking and organization.
 - `assets`: A library of all media files (video, audio) to be used.
 - `backgroundMusic`: Configuration for continuous background audio throughout the video.
 - `timeline`: A chronological sequence of timed events that happen _on_ the video.
@@ -149,9 +149,8 @@ The webhook will receive a JSON payload with the following structure:
 - `s3Uri` - Always present for S3 uploads, `null` for local files
 - If pre-signed URL generation fails, `url` and `urlExpiresAt` will be `null`
 
-````
-
 **Retry Logic:**
+
 - 3 automatic retry attempts with exponential backoff (1s, 2s, 4s)
 - 4xx errors are not retried (client configuration issues)
 - 5xx errors and network timeouts are retried
@@ -162,6 +161,7 @@ The webhook will receive a JSON payload with the following structure:
 The system supports both managed and custom S3 buckets:
 
 **Managed Bucket (Recommended for beginners):**
+
 - Automatically created during deployment
 - Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
 - Available to Lambda functions via `S3_BUCKET_NAME` environment variable
@@ -170,6 +170,7 @@ The system supports both managed and custom S3 buckets:
 - Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
 
 **Custom Bucket (Advanced users):**
+
 - Specify full S3 URI in asset sources and output destination
 - Requires proper IAM permissions for the Lambda functions
 - Example: `s3://my-custom-bucket/my-folder/`
@@ -218,7 +219,7 @@ The system supports both managed and custom S3 buckets:
     }
   }
 }
-````
+```
 
 ### Complete Example with Custom S3 Bucket: `job_spec.json`
 

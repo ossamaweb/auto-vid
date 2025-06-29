@@ -1,8 +1,0 @@
-{
-  "httpMethod": "POST",
-  "path": "/submit",
-  "headers": {
-    "Content-Type": "application/json"
-  },
-  "body": "{\"metadata\": {\"projectId\": \"test_project\", \"title\": \"Test Video\"}, \"assets\": {\"video\": {\"id\": \"main_video\", \"source\": \"https://example.com/video.mp4\"}}, \"timeline\": [], \"output\": {\"destination\": \"s3://output-bucket/\", \"filename\": \"test.mp4\", \"format\": \"mp4\"}}"
-}
