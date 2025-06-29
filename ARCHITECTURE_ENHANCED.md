@@ -7,22 +7,26 @@ The Submit Job Lambda function has been enhanced with production-ready features 
 ## Key Improvements
 
 ### 1. **DynamoDB Job Tracking**
+
 - **Table**: `auto-vid-dynamodb-jobs-{stack-name}-{account-id}`
 - **TTL**: 7 days automatic cleanup
 - **Status Tracking**: submitted → processing → completed/failed/retrying
 - **Full Job Spec Storage**: Complete job specifications stored for debugging and reprocessing
 
 ### 2. **Environment Variables**
-- `JOB_QUEUE_URL`: SQS queue URL from CloudFormation
-- `JOB_STATUS_TABLE`: DynamoDB table name
-- `AUTO_VID_BUCKET`: Managed S3 bucket
+
+- `SQS_JOB_QUEUE_URL`: SQS queue URL from CloudFormation
+- `DYNAMODB_JOBS_TABLE`: DynamoDB table name
+- `S3_BUCKET_NAME`: Managed S3 bucket
 
 ### 3. **Enhanced Error Handling**
+
 - Input validation with detailed error messages
 - Standardized error responses with timestamps
 - Proper HTTP status codes and headers
 
 ### 4. **Job Status Manager**
+
 - Centralized DynamoDB operations
 - Consistent status updates across all functions
 - Metadata extraction and storage
@@ -46,6 +50,7 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 ## API Responses
 
 ### Submit Job Success
+
 ```json
 {
   "jobId": "uuid",
@@ -67,6 +72,7 @@ Get Status Lambda ← DynamoDB (read job) ← DynamoDB (update status) ←
 ```
 
 ### Get Status Response
+
 ```json
 {
   "jobId": "uuid",

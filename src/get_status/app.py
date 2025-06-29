@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 from typing import Dict, Any
-from job_status_manager import JobManager
+from job_manager import JobManager
 
 
 def lambda_handler(event, context):

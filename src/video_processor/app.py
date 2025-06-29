@@ -9,12 +9,10 @@ from asset_manager import AssetManager
 
 
 # Add layers path for local development and Docker
-layers_path = os.path.join(
-    os.path.dirname(__file__), "..", "..", "layers", "auto-vid-shared"
-)
+layers_path = os.path.join(os.path.dirname(__file__), "..", "..", "layers", "shared")
 sys.path.insert(0, os.path.abspath(layers_path))
 from job_validator import validate_job_spec  # noqa: E402
-from job_status_manager import JobManager  # noqa: E402
+from job_manager import JobManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +199,7 @@ def upload_file(asset_manager_processor, video_result, job_spec):
         # Determine destination
         destination = job_spec.output.destination
         if not destination:
-            bucket_name = os.environ.get("AUTO_VID_BUCKET")
+            bucket_name = os.environ.get("S3_BUCKET_NAME")
             if bucket_name:
                 destination = f"s3://{bucket_name}/outputs/"
             else:

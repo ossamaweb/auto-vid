@@ -8,7 +8,7 @@ from response_formatter import create_standardized_response
 class JobManager:
     def __init__(self):
         self.dynamodb = boto3.resource("dynamodb")
-        self.table_name = os.environ["JOB_STATUS_TABLE"]
+        self.table_name = os.environ["DYNAMODB_JOBS_TABLE"]
         self.table = self.dynamodb.Table(self.table_name)
 
     def create_job(
@@ -18,7 +18,7 @@ class JobManager:
     ) -> Dict[str, Any]:
         """Create a new job record with submitted status and return standardized response"""
         timestamp = datetime.now(timezone.utc).isoformat()
-        ttl_seconds = int(os.environ.get("DYNAMODB_JOB_TTL_SECONDS", "604800"))
+        ttl_seconds = int(os.environ.get("DYNAMODB_JOBS_TTL_SECONDS", "604800"))
         ttl = int(datetime.now(timezone.utc).timestamp()) + ttl_seconds
 
         item = create_standardized_response(

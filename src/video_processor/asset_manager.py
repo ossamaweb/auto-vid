@@ -13,24 +13,36 @@ logger = logging.getLogger(__name__)
 class AssetManager:
     def __init__(self):
         """Initialize AssetManager with S3 client and retry configuration"""
-        region = os.getenv('AWS_REGION', 'us-east-1')
+        region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
         self.s3_client = boto3.client(
             "s3",
             region_name=region,
             config=Config(
-                retries={"max_attempts": 3, "mode": "adaptive"}, 
+                retries={"max_attempts": 3, "mode": "adaptive"},
                 max_pool_connections=50,
-                signature_version='s3v4'
+                signature_version="s3v4",
             ),
         )
         self.s3_uri_pattern = re.compile(r"^s3://([^/]+)/(.+)$")
         self.retry_attempts = 3
         self.timeout = 30
         self.backoff_base = 2
-        
+
         # HTTP error categorization
         self.permanent_http_errors = {400, 401, 403, 404, 405, 410, 422}
-        self.temporary_http_errors = {408, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524}
+        self.temporary_http_errors = {
+            408,
+            429,
+            500,
+            502,
+            503,
+            504,
+            520,
+            521,
+            522,
+            523,
+            524,
+        }
 
     def download_asset(self, source_uri, temp_dir):
         """Download asset from S3, HTTP/HTTPS, or copy local file"""
@@ -139,10 +151,12 @@ class AssetManager:
             try:
                 logger.info(f"Downloading {url} (attempt {attempt + 1})")
                 response = requests.get(url, stream=True, timeout=self.timeout)
-                
+
                 if response.status_code in self.permanent_http_errors:
-                    raise requests.exceptions.HTTPError(f"HTTP {response.status_code} error downloading {url}")
-                
+                    raise requests.exceptions.HTTPError(
+                        f"HTTP {response.status_code} error downloading {url}"
+                    )
+
                 response.raise_for_status()
 
                 with open(local_path, "wb") as f:
@@ -154,13 +168,18 @@ class AssetManager:
             except requests.exceptions.HTTPError as e:
                 if any(str(code) in str(e) for code in self.permanent_http_errors):
                     raise
-                logger.warning(f"URL download attempt {attempt + 1} failed with HTTP error: {e}")
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, 
-                   requests.exceptions.SSLError) as e:
+                logger.warning(
+                    f"URL download attempt {attempt + 1} failed with HTTP error: {e}"
+                )
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.SSLError,
+            ) as e:
                 logger.warning(f"URL download attempt {attempt + 1} network error: {e}")
             except requests.exceptions.RequestException as e:
                 logger.warning(f"URL download attempt {attempt + 1} failed: {e}")
-                
+
             if attempt == self.retry_attempts - 1:
                 raise
             time.sleep(self.backoff_base**attempt)
@@ -182,17 +201,19 @@ class AssetManager:
         except Exception as e:
             logger.error(f"Failed to copy local file: {e}")
             raise
-    
+
     def generate_presigned_url(self, bucket, key, expiration_seconds=None):
         """Generate pre-signed URL for S3 object"""
         if expiration_seconds is None:
-            expiration_seconds = int(os.getenv('S3_PRESIGNED_URL_EXPIRATION', '86400'))  # 24 hours default
-        
+            expiration_seconds = int(
+                os.getenv("S3_PRESIGNED_URL_EXPIRATION", "86400")
+            )  # 24 hours default
+
         try:
             presigned_url = self.s3_client.generate_presigned_url(
-                'get_object',
-                Params={'Bucket': bucket, 'Key': key},
-                ExpiresIn=expiration_seconds
+                "get_object",
+                Params={"Bucket": bucket, "Key": key},
+                ExpiresIn=expiration_seconds,
             )
             return presigned_url
         except ClientError as e:

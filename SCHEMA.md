@@ -103,6 +103,7 @@ Defines notification settings for job completion.
 
 **Webhook Payload:**
 The webhook will receive a JSON payload with the following structure:
+
 ```json
 {
   "jobId": "uuid",
@@ -124,6 +125,7 @@ The webhook will receive a JSON payload with the following structure:
 ```
 
 **Payload Fields:**
+
 - `jobId` - Unique job identifier
 - `status` - "completed" or "failed"
 - `submittedAt` - ISO 8601 submission time (UTC)
@@ -141,11 +143,13 @@ The webhook will receive a JSON payload with the following structure:
 **Note:** The `output` section is always present with all fields included. On failure or when unavailable, fields are set to `null`.
 
 **URL Behavior:**
+
 - `url` - Pre-signed download URL (expires in 24 hours by default)
 - `urlExpiresAt` - Only present when `url` is a valid pre-signed URL
 - `s3Uri` - Always present for S3 uploads, `null` for local files
 - If pre-signed URL generation fails, `url` and `urlExpiresAt` will be `null`
-```
+
+````
 
 **Retry Logic:**
 - 3 automatic retry attempts with exponential backoff (1s, 2s, 4s)
@@ -160,7 +164,7 @@ The system supports both managed and custom S3 buckets:
 **Managed Bucket (Recommended for beginners):**
 - Automatically created during deployment
 - Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
-- Available to Lambda functions via `AUTO_VID_BUCKET` environment variable
+- Available to Lambda functions via `S3_BUCKET_NAME` environment variable
 - Used when `destination` is omitted from output configuration
 - Organized with `/assets/` and `/outputs/` prefixes
 - Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
@@ -214,7 +218,7 @@ The system supports both managed and custom S3 buckets:
     }
   }
 }
-```
+````
 
 ### Complete Example with Custom S3 Bucket: `job_spec.json`
 

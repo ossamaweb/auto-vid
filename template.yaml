@@ -2,11 +2,17 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Auto-Vid Serverless Video Processing Application
 
+Parameters:
+  AppName:
+    Type: String
+    Default: auto-vid
+    Description: Application name used for resource naming
+
 Resources:
-  AutoVidBucket:
+  S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "auto-vid-s3-bucket-${AWS::StackName}-${AWS::AccountId}"
+      BucketName: !Sub "${AppName}-s3-bucket-${AWS::StackName}-${AWS::AccountId}"
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -15,30 +21,15 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  AutoVidSharedLayer:
+  SharedLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: !Sub "auto-vid-layer-shared-${AWS::StackName}-${AWS::AccountId}"
-      ContentUri: layers/auto-vid-shared/
+      LayerName: !Sub "${AppName}-layer-shared-${AWS::StackName}-${AWS::AccountId}"
+      ContentUri: layers/shared/
       CompatibleRuntimes:
         - python3.12
     Metadata:
       BuildMethod: python3.12
-
-  JobStatusTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "auto-vid-dynamodb-jobs-${AWS::StackName}-${AWS::AccountId}"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: jobId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: jobId
-          KeyType: HASH
-      TimeToLiveSpecification:
-        AttributeName: ttl
-        Enabled: true
 
   SubmitJobFunction:
     Type: AWS::Serverless::Function
@@ -49,17 +40,17 @@ Resources:
       MemorySize: 512
       Timeout: 60
       Layers:
-        - !Ref AutoVidSharedLayer
+        - !Ref SharedLayer
       Environment:
         Variables:
-          JOB_QUEUE_URL: !Ref JobQueue
-          JOB_STATUS_TABLE: !Ref JobStatusTable
-          DYNAMODB_JOB_TTL_SECONDS: 604800
+          SQS_JOB_QUEUE_URL: !Ref JobsQueue
+          DYNAMODB_JOBS_TABLE: !Ref JobsTable
+          DYNAMODB_JOBS_TTL_SECONDS: 604800
       Policies:
         - SQSSendMessagePolicy:
-            QueueName: !GetAtt JobQueue.QueueName
+            QueueName: !GetAtt JobsQueue.QueueName
         - DynamoDBCrudPolicy:
-            TableName: !Ref JobStatusTable
+            TableName: !Ref JobsTable
       Events:
         SubmitJob:
           Type: Api
@@ -77,24 +68,24 @@ Resources:
         Size: 10240
       Environment:
         Variables:
-          AUTO_VID_BUCKET: !Ref AutoVidBucket
-          AWS_REGION: !Ref AWS::Region
-          JOB_STATUS_TABLE: !Ref JobStatusTable
-          DYNAMODB_JOB_TTL_SECONDS: 604800
+          S3_BUCKET_NAME: !Ref S3Bucket
+          AWS_DEFAULT_REGION: !Ref AWS::Region
+          DYNAMODB_JOBS_TABLE: !Ref JobsTable
+          DYNAMODB_JOBS_TTL_SECONDS: 604800
           WEBHOOK_MAX_HEADERS_SIZE: 1024
           WEBHOOK_MAX_METADATA_SIZE: 1024
           S3_PRESIGNED_URL_EXPIRATION: 86400
       Policies:
         - AmazonPollyFullAccess
         - S3CrudPolicy:
-            BucketName: !Ref AutoVidBucket
+            BucketName: !Ref S3Bucket
         - DynamoDBCrudPolicy:
-            TableName: !Ref JobStatusTable
+            TableName: !Ref JobsTable
       Events:
         ProcessJob:
           Type: SQS
           Properties:
-            Queue: !GetAtt JobQueue.Arn
+            Queue: !GetAtt JobsQueue.Arn
     Metadata:
       Dockerfile: Dockerfile.videoprocessor
       DockerContext: .
@@ -109,14 +100,14 @@ Resources:
       MemorySize: 256
       Timeout: 30
       Layers:
-        - !Ref AutoVidSharedLayer
+        - !Ref SharedLayer
       Environment:
         Variables:
-          JOB_STATUS_TABLE: !Ref JobStatusTable
-          DYNAMODB_JOB_TTL_SECONDS: 604800
+          DYNAMODB_JOBS_TABLE: !Ref JobsTable
+          DYNAMODB_JOBS_TTL_SECONDS: 604800
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref JobStatusTable
+            TableName: !Ref JobsTable
       Events:
         GetStatus:
           Type: Api
@@ -124,10 +115,25 @@ Resources:
             Path: /status/{jobId}
             Method: get
 
-  JobQueue:
+  JobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AppName}-dynamodb-jobs-${AWS::StackName}-${AWS::AccountId}"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: jobId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: jobId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  JobsQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "auto-vid-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
+      QueueName: !Sub "${AppName}-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
       VisibilityTimeout: 960
 
 Outputs:
@@ -139,20 +145,20 @@ Outputs:
     Description: "API Gateway endpoint URL for Get Status function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/status/"
 
-  AutoVidBucket:
+  S3Bucket:
     Description: "S3 bucket for Auto-Vid assets and outputs"
-    Value: !Ref AutoVidBucket
+    Value: !Ref S3Bucket
     Export:
-      Name: !Sub "${AWS::StackName}-AutoVidBucket"
+      Name: !Sub "${AWS::StackName}-S3Bucket"
 
-  JobStatusTable:
+  JobsTable:
     Description: "DynamoDB table for job status tracking"
-    Value: !Ref JobStatusTable
+    Value: !Ref JobsTable
     Export:
-      Name: !Sub "${AWS::StackName}-JobStatusTable"
+      Name: !Sub "${AWS::StackName}-JobsTable"
 
-  JobQueue:
+  JobsQueue:
     Description: "SQS queue for video processing jobs"
-    Value: !Ref JobQueue
+    Value: !Ref JobsQueue
     Export:
-      Name: !Sub "${AWS::StackName}-JobQueue"
+      Name: !Sub "${AWS::StackName}-JobsQueue"

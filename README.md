@@ -319,7 +319,7 @@ cat > env.json << EOF
     "AWS_ACCESS_KEY_ID": "your-access-key",
     "AWS_SECRET_ACCESS_KEY": "your-secret-key",
     "AWS_DEFAULT_REGION": "us-east-1",
-    "AUTO_VID_BUCKET": "auto-vid-your-stack-name-your-account-id"
+    "S3_BUCKET_NAME": "auto-vid-your-stack-name-your-account-id"
   }
 }
 EOF
@@ -328,7 +328,7 @@ EOF
 aws s3 ls | grep auto-vid
 # OR
 aws cloudformation describe-stacks --stack-name your-stack-name \
-  --query 'Stacks[0].Outputs[?OutputKey==`AutoVidBucket`].OutputValue' --output text
+  --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue' --output text
 
 # Run with environment variables
 sam local invoke videoprocessorfunction -e events/event-process-job.json \
@@ -339,7 +339,7 @@ sam local invoke videoprocessorfunction -e events/event-process-job.json \
 
 **CloudFormation References Don't Work Locally**
 
-- `AUTO_VID_BUCKET: !Ref AutoVidBucket` becomes literal `"AutoVidBucket"` in local testing
+- `S3_BUCKET_NAME: !Ref S3Bucket` becomes literal `"S3Bucket"` in local testing
 - Use actual bucket names in `env.json` for S3 testing
 - Or use local destinations for simpler testing
 
@@ -366,7 +366,7 @@ docker run -it --entrypoint /bin/bash videoprocessorfunction:latest
 
 # Inside container, explore the environment
 ls -la /var/task/
-echo $AUTO_VID_BUCKET
+echo $S3_BUCKET_NAME
 python3 -c "import video_processor; print('Import successful')"
 
 # Clean up dangling images
@@ -399,7 +399,7 @@ SAM handles the entire deployment automatically:
 │       ├── video_processor.py
 │       ├── asset_manager.py  # S3 integration
 │       └── tts_generator.py  # AWS Polly integration
-├── layers/auto-vid-shared/   # Shared Pydantic models
+├── layers/shared/   # Shared Pydantic models
 │   ├── job_spec_models.py
 │   ├── job_validator.py
 │   └── polly_constants.py    # Voice/language definitions
@@ -412,13 +412,13 @@ SAM handles the entire deployment automatically:
 
 ### Environment Variables
 
-- `AUTO_VID_BUCKET` - Managed S3 bucket name (auto-configured)
-- `AWS_REGION` - AWS region for S3 operations (auto-configured from deployment region)
+- `S3_BUCKET_NAME` - Managed S3 bucket name (auto-configured)
+- `AWS_DEFAULT_REGION` - AWS region for S3 operations (auto-configured from deployment region)
 - `AWS_LAMBDA_FUNCTION_NAME` - Detected automatically in Lambda
 - `WEBHOOK_MAX_HEADERS_SIZE` - Maximum webhook headers size in bytes (default: 1024)
 - `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size in bytes (default: 1024)
 - `S3_PRESIGNED_URL_EXPIRATION` - Pre-signed URL expiration in seconds (default: 86400 = 24 hours)
-- `DYNAMODB_JOB_TTL_SECONDS` - Controls the TTL (time-to-live, in seconds) for job records in DynamoDB. After this period, jobs are automatically deleted by DynamoDB. Default is 604800 (7 days).
+- `DYNAMODB_JOBS_TTL_SECONDS` - Controls the TTL (time-to-live, in seconds) for job records in DynamoDB. After this period, jobs are automatically deleted by DynamoDB. Default is 604800 (7 days).
 
 ### Resource Naming
 

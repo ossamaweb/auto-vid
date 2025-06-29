@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # Add paths for imports
 sys.path.append("src/video_processor")
-sys.path.append("layers/auto-vid-shared")
+sys.path.append("layers/shared")
 from webhook_notifier import WebhookNotifier
 from video_processor import VideoProcessor
 from asset_manager import AssetManager
