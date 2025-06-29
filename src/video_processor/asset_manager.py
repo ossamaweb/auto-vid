@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class AssetManager:
     def __init__(self):
         """Initialize AssetManager with S3 client and retry configuration"""
-        region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+        region = os.getenv("APP_AWS_REGION", "us-east-1")
         self.s3_client = boto3.client(
             "s3",
             region_name=region,

@@ -302,7 +302,7 @@ mkdir -p ./output
 # "output": {"destination": "./output", "filename": "test-video.mp4"}
 
 # Run with volume mount
-sam local invoke videoprocessorfunction -e events/event-process-job.json \
+sam local invoke VideoProcessorFunction -e events/event-process-job.json \
   --docker-volume-basedir $(pwd)
 
 # Check output
@@ -315,10 +315,10 @@ ls -la ./output/
 # Create env.json with actual AWS resources
 cat > env.json << EOF
 {
-  "videoprocessorfunction": {
+  "VideoProcessorFunction": {
     "AWS_ACCESS_KEY_ID": "your-access-key",
     "AWS_SECRET_ACCESS_KEY": "your-secret-key",
-    "AWS_DEFAULT_REGION": "us-east-1",
+    "APP_AWS_REGION": "us-east-1",
     "S3_BUCKET_NAME": "auto-vid-your-stack-name-your-account-id"
   }
 }
@@ -331,7 +331,7 @@ aws cloudformation describe-stacks --stack-name your-stack-name \
   --query 'Stacks[0].Outputs[?OutputKey==`S3Bucket`].OutputValue' --output text
 
 # Run with environment variables
-sam local invoke videoprocessorfunction -e events/event-process-job.json \
+sam local invoke VideoProcessorFunction -e events/event-process-job.json \
   --env-vars env.json
 ```
 
@@ -362,7 +362,7 @@ sam local invoke videoprocessorfunction -e events/event-process-job.json \
 sam build
 
 # Debug container interactively
-docker run -it --entrypoint /bin/bash videoprocessorfunction:latest
+docker run -it --entrypoint /bin/bash VideoProcessorFunction:latest
 
 # Inside container, explore the environment
 ls -la /var/task/
@@ -413,7 +413,7 @@ SAM handles the entire deployment automatically:
 ### Environment Variables
 
 - `S3_BUCKET_NAME` - Managed S3 bucket name (auto-configured)
-- `AWS_DEFAULT_REGION` - AWS region for S3 operations (auto-configured from deployment region)
+- `APP_AWS_REGION` - AWS region for S3 operations (auto-configured from deployment region)
 - `AWS_LAMBDA_FUNCTION_NAME` - Detected automatically in Lambda
 - `WEBHOOK_MAX_HEADERS_SIZE` - Maximum webhook headers size in bytes (default: 1024)
 - `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size in bytes (default: 1024)

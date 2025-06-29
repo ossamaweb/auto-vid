@@ -58,7 +58,7 @@ Resources:
             Path: /submit
             Method: post
 
-  videoprocessorfunction:
+  VideoProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
@@ -68,8 +68,8 @@ Resources:
         Size: 10240
       Environment:
         Variables:
+          APP_AWS_REGION: !Ref AWS::Region
           S3_BUCKET_NAME: !Ref S3Bucket
-          AWS_DEFAULT_REGION: !Ref AWS::Region
           DYNAMODB_JOBS_TABLE: !Ref JobsTable
           DYNAMODB_JOBS_TTL_SECONDS: 604800
           WEBHOOK_MAX_HEADERS_SIZE: 1024
@@ -90,6 +90,7 @@ Resources:
       Dockerfile: Dockerfile.videoprocessor
       DockerContext: .
       DockerTag: latest
+      ResourceName: videoprocessorfunction
 
   GetStatusFunction:
     Type: AWS::Serverless::Function
