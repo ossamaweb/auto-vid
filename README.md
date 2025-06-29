@@ -45,7 +45,7 @@ sam deploy --guided
 
 ```bash
 # Replace with your actual API URL from deployment output
-API_URL="https://your-api-id.execute-api.us-east-1.amazonaws.com/Prod"
+API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
 
 # Submit test job
 curl -X POST $API_URL/submit \

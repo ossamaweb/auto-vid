@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class AssetManager:
     def __init__(self):
         """Initialize AssetManager with S3 client and retry configuration"""
-        region = os.getenv("APP_AWS_REGION", "us-east-1")
+        region = os.getenv("APP_AWS_REGION", "us-east-2")
         self.s3_client = boto3.client(
             "s3",
             region_name=region,
@@ -21,6 +21,7 @@ class AssetManager:
                 retries={"max_attempts": 3, "mode": "adaptive"},
                 max_pool_connections=50,
                 signature_version="s3v4",
+                s3={"addressing_style": "virtual"},
             ),
         )
         self.s3_uri_pattern = re.compile(r"^s3://([^/]+)/(.+)$")
