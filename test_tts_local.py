@@ -79,7 +79,7 @@ def test_tts():
 
     try:
         tts = TTSGenerator()
-        output_dir = "./dist/.aws-polly"
+        output_dir = "./media/outputs/.aws-polly"
         os.makedirs(output_dir, exist_ok=True)
 
         if lang_arg == "all":

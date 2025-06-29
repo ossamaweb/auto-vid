@@ -3,10 +3,7 @@
   "jobInfo": {
     "projectId": "tmmm",
     "title": "Tyler Perry Paychecks - Hits and Flops",
-    "tags": [
-      "tyler perry",
-      "paychecks"
-    ]
+    "tags": ["tyler perry", "paychecks"]
   },
   "assets": {
     "video": {
@@ -16,11 +13,11 @@
     "audio": [
       {
         "id": "music_a_huevo",
-        "source": "./lib/music/A Huevo - Luna Cantina.mp3"
+        "source": "./assets/music/A Huevo - Luna Cantina.mp3"
       },
       {
         "id": "music_island_life",
-        "source": "./lib/music/Island Life - Telecasted.mp3"
+        "source": "./assets/music/Island Life - Telecasted.mp3"
       },
       {
         "id": "music_shake_it",
@@ -28,36 +25,32 @@
       },
       {
         "id": "sfx_swoosh",
-        "source": "./lib/sfx/swoosh.wav"
+        "source": "./assets/sfx/swoosh.wav"
       },
       {
         "id": "sfx_cheers",
-        "source": "./lib/sfx/cheers.WAV"
+        "source": "./assets/sfx/cheers.WAV"
       },
       {
         "id": "sfx_whistles",
-        "source": "./lib/sfx/whistles.WAV"
+        "source": "./assets/sfx/whistles.WAV"
       },
       {
         "id": "sfx_subscribe",
-        "source": "./lib/sfx/subscribe.WAV"
+        "source": "./assets/sfx/subscribe.WAV"
       },
       {
         "id": "sfx_applause",
-        "source": "./lib/sfx/applause.WAV"
+        "source": "./assets/sfx/applause.WAV"
       },
       {
         "id": "sfx_boos",
-        "source": "./lib/sfx/boos.WAV"
+        "source": "./assets/sfx/boos.WAV"
       }
     ]
   },
   "backgroundMusic": {
-    "playlist": [
-      "music_a_huevo",
-      "music_island_life",
-      "music_shake_itXXX"
-    ],
+    "playlist": ["music_a_huevo", "music_island_life", "music_shake_itXXX"],
     "loop": true,
     "volume": 0.2,
     "crossfadeDuration": 2.0
@@ -347,7 +340,7 @@
     }
   ],
   "output": {
-    "destination": "./dist/tyler-perry",
+    "destination": "./media/outputs/tyler-perry",
     "filename": "tyler_perry_paychecks_hits_and_flops_the-movie-money-man-new.mp4",
     "encoding": {
       "preset": "ultrafast"

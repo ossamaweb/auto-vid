@@ -37,7 +37,12 @@ sam build # Takes time to build the video processor Docker image
 sam deploy --guided
 # Answer 'Y' to create managed ECR repositories
 
-# After deployment completes, SAM will show your API endpoints
+# After deployment, sync demo assets to S3
+# Replace with your actual S3 bucket from deployment output
+BUCKET_NAME="auto-vid-s3-bucket-stack-name-123456789"
+aws s3 sync ./media/assets/ s3://$BUCKET_NAME/assets/
+aws s3 sync ./media/inputs/ s3://$BUCKET_NAME/inputs/
+
 # Copy the SubmitJobApi and GetStatusApi URLs from the output
 ```
 
@@ -132,13 +137,13 @@ sam deploy --guided
 │   ├── response_formatter.py # Standardized responses
 │   ├── polly_constants.py    # Voice/language definitions
 │   └── requirements.txt      # Shared dependencies
+├── media/                    # Media files (matches S3 structure)
+│   ├── assets/              # Demo audio files (music + sfx)
+│   ├── inputs/              # Sample input videos
+│   └── outputs/             # Generated videos (gitignored)
+├── tmp/                     # Temporary files during processing (gitignored)
 ├── docs/                     # Documentation
-├── lib/                      # Sample assets
-│   ├── music/               # Background music files
-│   └── sfx/                 # Sound effects
 ├── sample_input/            # Example job specifications
-├── tmp/                     # Temporary files during processing
-├── dist/                    # Locally generated videos
 ├── template.yaml            # SAM infrastructure
 ├── Dockerfile.videoprocessor # Container definition
 ├── test_*.py               # Local testing scripts

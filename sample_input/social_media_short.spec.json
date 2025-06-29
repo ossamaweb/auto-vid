@@ -12,15 +12,15 @@
     "audio": [
       {
         "id": "bgm_track",
-        "source": "./lib/music/Alternate - Vibe Tracks.mp3"
+        "source": "./assets/music/Alternate - Vibe Tracks.mp3"
       },
       {
         "id": "fast_whoosh",
-        "source": "./lib/sfx/fast-whoosh-118248.mp3"
+        "source": "./assets/sfx/fast-whoosh-118248.mp3"
       },
       {
         "id": "impact_boom",
-        "source": "./lib/sfx/impact-cinematic-boom-5-352465.mp3"
+        "source": "./assets/sfx/impact-cinematic-boom-5-352465.mp3"
       }
     ]
   },

@@ -73,10 +73,11 @@ dist/
 temp/
 tmp/
 .private/
-*.mp4
-*.mp3
-*.wav
-*.m4a
+
+# Generated videos (keep folder structure)
+media/outputs/*
+!media/outputs/.gitkeep
+
 
 # SAM
 .aws-sam/
