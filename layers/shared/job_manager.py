@@ -2,6 +2,7 @@ import boto3
 import os
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
+from decimal import Decimal
 from response_formatter import create_standardized_response
 
 
@@ -10,6 +11,17 @@ class JobManager:
         self.dynamodb = boto3.resource("dynamodb")
         self.table_name = os.environ["DYNAMODB_JOBS_TABLE"]
         self.table = self.dynamodb.Table(self.table_name)
+    
+    def _convert_for_dynamodb(self, data):
+        """Convert floats to Decimal for DynamoDB compatibility"""
+        if isinstance(data, dict):
+            return {k: self._convert_for_dynamodb(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._convert_for_dynamodb(item) for item in data]
+        elif isinstance(data, float):
+            return Decimal(str(data))
+        else:
+            return data
 
     def create_job(
         self,
@@ -29,9 +41,9 @@ class JobManager:
             job_info=job_info,
         )
 
-        # Add DynamoDB-specific fields
-        # item['jobSpec'] = job_spec
+        # Add DynamoDB-specific fields and convert types
         item["ttl"] = ttl
+        item = self._convert_for_dynamodb(item)
 
         self.table.put_item(Item=item)
         return item
@@ -54,8 +66,8 @@ class JobManager:
                 ":status": status,
                 ":updated": timestamp,
                 ":completed": timestamp if status in ["completed", "failed"] else None,
-                ":time": round(processing_time, 2),
-                ":output": output,
+                ":time": self._convert_for_dynamodb(round(processing_time, 2)),
+                ":output": self._convert_for_dynamodb(output),
                 ":error": error,
             },
             ExpressionAttributeNames={
@@ -77,7 +89,7 @@ class JobManager:
         for key, value in kwargs.items():
             if value is not None:
                 update_expr += f", {key} = :{key}"
-                expr_values[f":{key}"] = value
+                expr_values[f":{key}"] = self._convert_for_dynamodb(value)
 
         self.table.update_item(
             Key={"jobId": job_id},
