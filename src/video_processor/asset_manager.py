@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError, NoCredentialsError
 from botocore.config import Config
 import time
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -126,12 +127,15 @@ class AssetManager:
                 return local_path
             except ClientError as e:
                 error_code = e.response["Error"]["Code"]
-                if error_code in ["NoSuchBucket", "NoSuchKey"]:
-                    logger.error(f"S3 object not found: {s3_uri}")
-                    raise FileNotFoundError(f"S3 object not found: {s3_uri}")
-                elif error_code == "AccessDenied":
-                    logger.error(f"Access denied to S3 object: {s3_uri}")
-                    raise PermissionError(f"Access denied to S3 object: {s3_uri}")
+                logger.error(
+                    f"S3 download failed - Bucket: '{bucket}', Key: '{key}', Error: {error_code}"
+                )
+                if error_code in ["NoSuchBucket", "NoSuchKey", "404"]:
+                    raise FileNotFoundError(f"S3 object not found: s3://{bucket}/{key}")
+                elif error_code in ["AccessDenied", "403"]:
+                    raise PermissionError(
+                        f"Access denied to S3 object: s3://{bucket}/{key}"
+                    )
                 else:
                     logger.warning(f"S3 download attempt {attempt + 1} failed: {e}")
                     if attempt == self.retry_attempts - 1:  # Last attempt

@@ -7,20 +7,20 @@
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "./sample_input/social_media_short.mp4"
+      "source": "./media/inputs/social_media_short.mp4"
     },
     "audio": [
       {
         "id": "bgm_track",
-        "source": "./assets/music/Alternate - Vibe Tracks.mp3"
+        "source": "./media/assets/music/Alternate - Vibe Tracks.mp3"
       },
       {
         "id": "fast_whoosh",
-        "source": "./assets/sfx/fast-whoosh-118248.mp3"
+        "source": "./media/assets/sfx/fast-whoosh-118248.mp3"
       },
       {
         "id": "impact_boom",
-        "source": "./assets/sfx/impact-cinematic-boom-5-352465.mp3"
+        "source": "./media/assets/sfx/impact-cinematic-boom-5-352465.mp3"
       }
     ]
   },

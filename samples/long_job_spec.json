@@ -13,44 +13,40 @@
     "audio": [
       {
         "id": "music_a_huevo",
-        "source": "./assets/music/A Huevo - Luna Cantina.mp3"
+        "source": "./media/assets/music/A Huevo - Luna Cantina.mp3"
       },
       {
         "id": "music_island_life",
-        "source": "./assets/music/Island Life - Telecasted.mp3"
-      },
-      {
-        "id": "music_shake_it",
-        "source": "lib/music/Shake It - Aakash Gandhi.mp3"
+        "source": "./media/assets/music/Alternate - Vibe Tracks.mp3"
       },
       {
         "id": "sfx_swoosh",
-        "source": "./assets/sfx/swoosh.wav"
+        "source": "./media/assets/sfx/swoosh.wav"
       },
       {
         "id": "sfx_cheers",
-        "source": "./assets/sfx/cheers.WAV"
+        "source": "./media/assets/sfx/cheers.WAV"
       },
       {
         "id": "sfx_whistles",
-        "source": "./assets/sfx/whistles.WAV"
+        "source": "./media/assets/sfx/whistles.WAV"
       },
       {
         "id": "sfx_subscribe",
-        "source": "./assets/sfx/subscribe.WAV"
+        "source": "./media/assets/sfx/subscribe.WAV"
       },
       {
         "id": "sfx_applause",
-        "source": "./assets/sfx/applause.WAV"
+        "source": "./media/assets/sfx/applause.WAV"
       },
       {
         "id": "sfx_boos",
-        "source": "./assets/sfx/boos.WAV"
+        "source": "./media/assets/sfx/boos.WAV"
       }
     ]
   },
   "backgroundMusic": {
-    "playlist": ["music_a_huevo", "music_island_life", "music_shake_itXXX"],
+    "playlist": ["music_a_huevo", "music_island_life"],
     "loop": true,
     "volume": 0.2,
     "crossfadeDuration": 2.0
@@ -340,10 +336,9 @@
     }
   ],
   "output": {
-    "destination": "./media/outputs/tyler-perry",
     "filename": "tyler_perry_paychecks_hits_and_flops_the-movie-money-man-new.mp4",
     "encoding": {
-      "preset": "ultrafast"
+      "preset": "medium"
     }
   }
 }
