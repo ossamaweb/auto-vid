@@ -56,14 +56,14 @@ class TTSData(BaseModel):
     providerConfig: ProviderConfig = Field(default_factory=ProviderConfig)
     volume: float = Field(default=1.0, ge=0.0, le=1.0)
     duckingLevel: Optional[float] = Field(default=None, ge=0.0, le=1.0)
-    duckingFadeDuration: float = Field(default=0.0, ge=0.0)
+    duckingFadeDuration: float = Field(default=0.5, ge=0.0)
 
 
 class AudioData(BaseModel):
     assetId: str
     volume: float = Field(default=0.5, ge=0.0, le=1.0)
     duckingLevel: Optional[float] = Field(default=None, ge=0.0, le=1.0)
-    duckingFadeDuration: float = Field(default=0.0, ge=0.0)
+    duckingFadeDuration: float = Field(default=0.5, ge=0.0)
 
 
 class TTSEvent(BaseModel):

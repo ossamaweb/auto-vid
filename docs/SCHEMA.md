@@ -65,7 +65,7 @@ Defines a voiceover event.
     - `"textType"` (String, Default: "text"): Text format type. Options: "text" or "ssml" for Speech Synthesis Markup Language support.
   - `"volume"` (Float, 0.0-1.0, Default: 1.0): The volume of this specific TTS clip.
   - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
-  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.5): Time in seconds for the ducking fade transition.
 
 ##### Event Type: `audio`
 
@@ -77,7 +77,7 @@ Defines a sound effect or other pre-recorded audio clip event.
   - `"assetId"` (String, Required): The ID of the audio asset to play from the `assets` section.
   - `"volume"` (Float, 0.0-1.0, Default: 0.5): The volume of this specific audio clip.
   - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
-  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.5): Time in seconds for the ducking fade transition.
 
 #### 5. `output` (Object, Required)
 
