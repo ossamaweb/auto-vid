@@ -97,14 +97,6 @@ Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
 }
 ```
 
-**429 Too Many Requests:**
-
-```json
-{
-  "message": "Too Many Requests"
-}
-```
-
 **500 Internal Server Error:**
 
 ```json
@@ -177,14 +169,6 @@ Retrieve the current status of a job.
 }
 ```
 
-**429 Too Many Requests:**
-
-```json
-{
-  "message": "Too Many Requests"
-}
-```
-
 **500 Internal Server Error:**
 
 ```json
@@ -200,21 +184,6 @@ Retrieve the current status of a job.
 2. **processing** - Video generation in progress
 3. **completed** - Video successfully generated and available for download
 4. **failed** - Processing failed (check `error` field for details)
-
-## Rate Limits
-
-API key-based rate limiting is enforced to prevent abuse and manage costs:
-
-- **Rate Limit:** 2 requests per second
-- **Burst Limit:** 5 requests (short bursts allowed)
-- **Daily Quota:** 50 requests per day
-
-**Rate Limit Headers:**
-API Gateway returns standard rate limiting headers in responses.
-
-**Exceeding Limits:**
-- Returns `429 Too Many Requests` status
-- Retry after the rate limit window resets
 
 ## Examples
 

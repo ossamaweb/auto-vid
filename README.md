@@ -13,7 +13,7 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **🎵 Smart Audio Mixing** - Background music with crossfading, ducking, and volume control
 - **🔔 Webhook Notifications** - Real-time job completion notifications with retry logic
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
-- **🔐 API Security** - API key authentication with rate limiting (2 req/sec, 50/day)
+- **🔐 API Security** - API key authentication
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
 ## 🏗️ Architecture

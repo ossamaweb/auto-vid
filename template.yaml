@@ -148,35 +148,6 @@ Resources:
       Name: !Sub "${AppName}-api-key-${AWS::StackName}"
       Enabled: true
 
-  ApiStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      RestApiId: !Ref ServerlessRestApi
-      DeploymentId: !Ref ServerlessRestApiDeployment
-      StageName: Prod
-
-  UsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    DependsOn: ApiStage
-    Properties:
-      UsagePlanName: !Sub "${AppName}-usage-plan-${AWS::StackName}"
-      Throttle:
-        RateLimit: 2
-        BurstLimit: 5
-      Quota:
-        Limit: 50
-        Period: DAY
-      ApiStages:
-        - ApiId: !Ref ServerlessRestApi
-          Stage: Prod
-
-  UsagePlanKey:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Properties:
-      KeyId: !Ref ApiKey
-      KeyType: API_KEY
-      UsagePlanId: !Ref UsagePlan
-
 Outputs:
   SubmitJobApi:
     Description: "API Gateway endpoint URL for Submit Job function"

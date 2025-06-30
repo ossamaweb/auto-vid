@@ -11,7 +11,7 @@
 ## AWS Services Used
 
 - **Lambda** - Serverless compute with 15-minute timeout support
-- **API Gateway** - RESTful API endpoints with API key authentication and rate limiting
+- **API Gateway** - RESTful API endpoints with API key authentication
 - **SQS** - Reliable job queuing with dead letter handling
 - **S3** - Asset storage with lifecycle management
 - **Polly** - Neural and generative text-to-speech
@@ -49,11 +49,7 @@ All AWS resources use consistent naming with service type identification:
 - Key managed through AWS API Gateway console
 - Header: `X-API-Key: your-actual-key-value`
 
-**Rate Limiting:**
-- **Throttle:** 2 requests per second with 5 burst capacity
-- **Quota:** 50 requests per day
-- **Enforcement:** API Gateway usage plans
-- **Response:** 429 Too Many Requests when exceeded
+
 
 ### Managed S3 Bucket
 
@@ -90,7 +86,7 @@ All AWS resources use consistent naming with service type identification:
 - **✅ Input Validation** - Comprehensive Pydantic models
 - **✅ Error Handling** - Retry logic and detailed error messages
 - **✅ Security** - API key authentication, IAM least privilege, and input sanitization
-- **✅ Rate Limiting** - 2 req/sec, 5 burst, 50/day quota to prevent abuse
+
 - **✅ Monitoring** - CloudWatch logs and metrics
 - **✅ Scalability** - SQS queuing and Lambda concurrency
 - **✅ Cost Optimization** - Pay-per-use serverless architecture
