@@ -1,43 +1,74 @@
 import json
 import uuid
 import boto3
-from datetime import datetime
+import os
+from datetime import datetime, timezone
+from typing import Dict, Any
+
+from job_validator import validate_job_spec
+from job_manager import JobManager
+
 
 def lambda_handler(event, context):
+    """Submit job to SQS queue and create job record in DynamoDB"""
+
     try:
-        body = json.loads(event['body'])
-        job_spec = body['jobSpec']
-        
+        # Validate request structure
+        if not event.get("body"):
+            return create_error_response(400, "Missing request body")
+
+        try:
+            body = json.loads(event["body"])
+        except json.JSONDecodeError:
+            return create_error_response(400, "Invalid JSON in request body")
+
+        # Validate job specification
+        try:
+            job_spec = validate_job_spec(body)
+        except ValueError as e:
+            return create_error_response(400, str(e))
+
+        # Generate job ID and extract job info
         job_id = str(uuid.uuid4())
-        
+        job_info = body.get("jobInfo")
+
+        # Initialize job manager
+        job_manager = JobManager()
+
+        # Create job record in DynamoDB and get standardized response
+        response_data = job_manager.create_job(job_id, job_info)
+
         # Send job to SQS queue
-        sqs = boto3.client('sqs')
-        queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/auto-vid-jobs'
-        
+        queue_url = os.environ["SQS_JOB_QUEUE_URL"]
         message = {
-            'jobId': job_id,
-            'jobSpec': job_spec,
-            'submittedAt': datetime.utcnow().isoformat()
+            "jobId": job_id,
+            "jobSpec": body,
+            "submittedAt": datetime.now(timezone.utc).isoformat(),
         }
-        
-        sqs.send_message(
-            QueueUrl=queue_url,
-            MessageBody=json.dumps(message)
-        )
-        
+
+        sqs = boto3.client("sqs")
+        sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps(message))
+
         return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'jobId': job_id,
-                'status': 'submitted',
-                'message': 'Job submitted successfully'
-            })
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(response_data),
         }
-        
+
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': str(e)
-            })
-        }
+        print(f"Unexpected error: {str(e)}")
+        return create_error_response(500, "Internal server error")
+
+
+def create_error_response(status_code: int, error_message: str) -> Dict[str, Any]:
+    """Create standardized error response"""
+    return {
+        "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps(
+            {
+                "error": error_message,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ),
+    }

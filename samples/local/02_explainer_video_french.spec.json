@@ -1,0 +1,198 @@
+{
+  "jobInfo": {
+    "projectId": "mindset_video",
+    "title": "Mentalité de Croissance vs Mentalité Fixe",
+    "tags": ["french"]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "./media/inputs/explainer_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "bgm_music",
+        "source": "./media/assets/music/A Huevo - Luna Cantina.mp3"
+      },
+      {
+        "id": "sfx_swoosh",
+        "source": "./media/assets/sfx/swoosh-6-351021.mp3"
+      }
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["bgm_music"],
+    "loop": true,
+    "volume": 0.01,
+    "crossfadeDuration": 2.0
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "type": "tts",
+      "data": {
+        "text": "Il existe deux types d'état d'esprit qu'on peut cultiver :",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 3,
+      "type": "tts",
+      "data": {
+        "text": "un qui voit les problèmes comme des chances d'apprendre",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 6,
+      "type": "tts",
+      "data": {
+        "text": "et un qui les évite souvent par peur d'échouer.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 10,
+      "type": "tts",
+      "data": {
+        "text": "Ceux qui évitent les conflits ont un état d'esprit fixe.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 15,
+      "type": "tts",
+      "data": {
+        "text": "Ceux qui voient les problèmes comme des défis ont un état d'esprit de croissance.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 19,
+      "type": "tts",
+      "data": {
+        "text": "Parfois on aime passer de l'un à l'autre.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 24,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.7
+      }
+    },
+    {
+      "start": 24,
+      "type": "tts",
+      "data": {
+        "text": "Les gens ont un état d'esprit fixe car ils croient que des qualités comme l'intelligence ou les talents sont des traits fixes",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 31,
+      "type": "tts",
+      "data": {
+        "text": "et que ces traits sont responsables du succès.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 35,
+      "type": "tts",
+      "data": {
+        "text": "Ils aiment souvent documenter leurs réussites passées.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 39,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.7
+      }
+    },
+    {
+      "start": 39,
+      "type": "tts",
+      "data": {
+        "text": "Avec un état d'esprit de croissance les gens croient que de nouvelles capacités se développent par la pratique.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 45,
+      "type": "tts",
+      "data": {
+        "text": "Cette vision crée un amour d'apprendre que les grands leaders et artistes ont en commun.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    },
+    {
+      "start": 51,
+      "type": "tts",
+      "data": {
+        "text": "Pour eux la vie devient un voyage passionnant avec des opportunités infinies de découvrir de nouvelles choses et progresser.",
+        "providerConfig": {
+          "voiceId": "Lea",
+          "engine": "generative",
+          "languageCode": "fr-FR"
+        }
+      }
+    }
+  ],
+  "output": {
+    "destination": "./media/outputs/samples",
+    "filename": "explainer_video_french.mp4",
+    "encoding": {
+      "preset": "ultrafast"
+    }
+  }
+}

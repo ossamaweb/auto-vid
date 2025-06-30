@@ -1,0 +1,109 @@
+{
+  "jobInfo": {
+    "projectId": "tmmm",
+    "title": "Tom Cruise Paychecks - Hits and Flops",
+    "tags": ["tom cruise", "data video"]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "./media/inputs/data_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "music_a_huevo",
+        "source": "./media/assets/music/A Huevo - Luna Cantina.mp3"
+      },
+      {
+        "id": "music_island_life",
+        "source": "./media/assets/music/Alternate - Vibe Tracks.mp3"
+      },
+      {
+        "id": "sfx_swoosh",
+        "source": "./media/assets/sfx/swoosh-6-351021.mp3"
+      },
+      {
+        "id": "sfx_cheers",
+        "source": "./media/assets/sfx/cheers.wav"
+      }
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["music_a_huevo", "music_island_life"],
+    "loop": true,
+    "volume": 0.2,
+    "crossfadeDuration": 2.0
+  },
+  "timeline": [
+    {
+      "start": 14,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.45,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 14,
+      "type": "tts",
+      "data": {
+        "text": "Tom Cruise, known for massive paydays, did something truly unexpected for Magnolia. Instead of his typical multi-million dollar upfront salary, he took a shockingly low $100,000! This wasn't a financial misstep, but a deliberate choice driven by his strong desire to work with acclaimed director Paul Thomas Anderson on this unique project. It's a rare instance of a superstar prioritizing creative collaboration over a blockbuster paycheck.",
+        "provider": "aws-polly",
+        "providerConfig": {
+          "voiceId": "Matthew",
+          "engine": "generative",
+          "languageCode": "en-US",
+          "textType": "text"
+        },
+        "duckingLevel": 0.2,
+        "duckingFadeDuration": 1.0
+      }
+    },
+    {
+      "start": 37,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.2
+      }
+    },
+    {
+      "start": 52,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_cheers",
+        "volume": 0.5,
+        "duckingLevel": 0.5,
+        "duckingFadeDuration": 0.5
+      }
+    }
+  ],
+  "output": {
+    "destination": "./media/outputs/samples",
+    "filename": "data_video.mp4",
+    "encoding": {
+      "preset": "ultrafast",
+      "bitrate": "2500k",
+      "audio_bitrate": "128k",
+      "fps": 30
+    }
+  },
+
+  "notifications": {
+    "webhook": {
+      "url": "https://webhook.site/5c33cf5b-cf3d-457c-a09e-6b6a684d0c54",
+      "method": "PUT",
+      "headers": {
+        "X-Signature-SHA256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+      },
+      "metadata": {
+        "sheetId": "1fNV9dCf9pixvha",
+        "pageUrl": "https://example.com/data-video/40de5"
+      }
+    }
+  }
+}

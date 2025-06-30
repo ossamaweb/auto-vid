@@ -72,10 +72,12 @@ Desktop.ini
 dist/
 temp/
 tmp/
-*.mp4
-*.mp3
-*.wav
-*.m4a
+.private/
+
+# Generated videos (keep folder structure)
+media/outputs/*
+!media/outputs/.gitkeep
+
 
 # SAM
 .aws-sam/

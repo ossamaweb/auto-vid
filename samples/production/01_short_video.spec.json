@@ -1,0 +1,119 @@
+{
+  "jobInfo": {
+    "projectId": "ranking_shorts",
+    "title": "Ranking Meryl Streep Most Expensive Movies",
+    "tags": ["ranking shorts", "meryl streep"]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "s3://your-bucket-name/inputs/short_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "bgm_track",
+        "source": "s3://your-bucket-name/assets/music/Alternate - Vibe Tracks.mp3"
+      },
+      {
+        "id": "fast_whoosh",
+        "source": "s3://your-bucket-name/assets/sfx/fast-whoosh-118248.mp3"
+      },
+      {
+        "id": "impact_boom",
+        "source": "s3://your-bucket-name/assets/sfx/impact-cinematic-boom-5-352465.mp3"
+      }
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["bgm_track"],
+    "volume": 0.2
+  },
+  "timeline": [
+    {
+      "start": 0.5,
+      "type": "audio",
+      "data": {
+        "assetId": "fast_whoosh",
+        "volume": 0.5
+      }
+    },
+    {
+      "start": 1.2,
+      "type": "audio",
+      "data": {
+        "assetId": "impact_boom",
+        "volume": 1
+      }
+    },
+    {
+      "start": 3.5,
+      "type": "audio",
+      "data": {
+        "assetId": "fast_whoosh",
+        "volume": 0.5
+      }
+    },
+    {
+      "start": 4.2,
+      "type": "audio",
+      "data": {
+        "assetId": "impact_boom",
+        "volume": 1
+      }
+    },
+    {
+      "start": 6.35,
+      "type": "audio",
+      "data": {
+        "assetId": "fast_whoosh",
+        "volume": 0.5
+      }
+    },
+    {
+      "start": 7.05,
+      "type": "audio",
+      "data": {
+        "assetId": "impact_boom",
+        "volume": 1
+      }
+    },
+    {
+      "start": 9.2,
+      "type": "audio",
+      "data": {
+        "assetId": "fast_whoosh",
+        "volume": 1
+      }
+    },
+    {
+      "start": 9.9,
+      "type": "audio",
+      "data": {
+        "assetId": "impact_boom",
+        "volume": 1
+      }
+    },
+    {
+      "start": 12.05,
+      "type": "audio",
+      "data": {
+        "assetId": "fast_whoosh",
+        "volume": 0.5
+      }
+    },
+    {
+      "start": 13.25,
+      "type": "audio",
+      "data": {
+        "assetId": "impact_boom",
+        "volume": 1
+      }
+    }
+  ],
+  "output": {
+    "filename": "short_video.mp4",
+    "encoding": {
+      "preset": "medium"
+    }
+  }
+}
