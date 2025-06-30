@@ -164,49 +164,42 @@ No rate limits are currently enforced, but reasonable usage is expected.
 
 ## Examples
 
-### Submit Simple Job
+### Submit Job Using Sample Specs
 
 ```bash
+# Basic API demo (replace your-bucket-name with actual bucket)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -d '{
-    "jobInfo": {"projectId": "test", "title": "API Test"},
-    "assets": {
-      "video": {"id": "main", "source": "s3://bucket/video.mp4"},
-      "audio": []
-    },
-    "timeline": [],
-    "output": {"filename": "test.mp4"}
-  }'
+  -d @samples/production/00_api_demo_video.spec.json
+```
+
+### Submit Social Media Short with Sound Effects
+
+```bash
+# Social media short with multiple sound effects
+curl -X POST https://your-api-url/submit \
+  -H "Content-Type: application/json" \
+  -d @samples/production/01_short_video.spec.json
+```
+
+### Submit Multi-language TTS Video
+
+```bash
+# French explainer video
+curl -X POST https://your-api-url/submit \
+  -H "Content-Type: application/json" \
+  -d @samples/production/02_explainer_video_french.spec.json
+
+# Spanish explainer video
+curl -X POST https://your-api-url/submit \
+  -H "Content-Type: application/json" \
+  -d @samples/production/02_explainer_video_spanish.spec.json
 ```
 
 ### Check Job Status
 
 ```bash
 curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000
-```
-
-### Submit Job with TTS
-
-```bash
-curl -X POST https://your-api-url/submit \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jobInfo": {"projectId": "tts_demo", "title": "Voice Demo"},
-    "assets": {
-      "video": {"id": "main", "source": "s3://bucket/video.mp4"},
-      "audio": []
-    },
-    "timeline": [{
-      "start": 2.0,
-      "type": "tts",
-      "data": {
-        "text": "Welcome to Auto-Vid!",
-        "providerConfig": {"voiceId": "Joanna", "engine": "neural"}
-      }
-    }],
-    "output": {"filename": "tts-demo.mp4"}
-  }'
 ```
 
 ## Error Handling

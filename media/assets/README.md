@@ -26,6 +26,11 @@ This folder contains sample audio files for Auto-Vid demonstrations and testing.
 - `thud-sound-effect-319090.mp3`
 - `whoosh-cinematic-161021.mp3`
 
+## Videos
+
+- `api_demo_video.mp4` [Vitaliy Novak From Pixabay](https://pixabay.com/users/panmotion-2109004/?utm_source=link-attribution&utm_medium=referral&utm_campaign=video&utm_content=81188)
+- `explainer_video.mp4` [Sprouts - Youtube](https://www.youtube.com/watch?v=KUWn_TJTrnU&t=6s)
+
 ## Usage
 
 These assets are provided for demonstration purposes. When using in production:

@@ -1,0 +1,197 @@
+{
+  "jobInfo": {
+    "projectId": "mindset_video",
+    "title": "Mentalidad de Crecimiento vs Mentalidad Fija",
+    "tags": ["spanish"]
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "s3://your-bucket-name/inputs/explainer_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "bgm_music",
+        "source": "s3://your-bucket-name/assets/music/Alternate - Vibe Tracks.mp3"
+      },
+      {
+        "id": "sfx_swoosh",
+        "source": "s3://your-bucket-name/assets/sfx/swoosh-6-351021.mp3"
+      }
+    ]
+  },
+  "backgroundMusic": {
+    "playlist": ["bgm_music"],
+    "loop": true,
+    "volume": 0.01,
+    "crossfadeDuration": 2.0
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "type": "tts",
+      "data": {
+        "text": "Hay dos tipos de mentalidad que podemos cultivar:",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 3,
+      "type": "tts",
+      "data": {
+        "text": "una que ve problemas como oportunidades de aprender",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 6,
+      "type": "tts",
+      "data": {
+        "text": "y otra que los evita por miedo a fallar.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 10,
+      "type": "tts",
+      "data": {
+        "text": "Quienes evitan conflictos tienen una mentalidad fija.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 15,
+      "type": "tts",
+      "data": {
+        "text": "Los que ven problemas como retos tienen mentalidad de crecimiento.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 19,
+      "type": "tts",
+      "data": {
+        "text": "A veces nos gusta cambiar de una a la otra.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 24,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.7
+      }
+    },
+    {
+      "start": 24,
+      "type": "tts",
+      "data": {
+        "text": "La gente tiene mentalidad fija porque cree que cualidades como inteligencia o talento son rasgos fijos",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 31,
+      "type": "tts",
+      "data": {
+        "text": "y que estos rasgos son responsables del éxito.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 35,
+      "type": "tts",
+      "data": {
+        "text": "Suelen documentar logros del pasado.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 39,
+      "type": "audio",
+      "data": {
+        "assetId": "sfx_swoosh",
+        "volume": 0.7
+      }
+    },
+    {
+      "start": 39,
+      "type": "tts",
+      "data": {
+        "text": "Con mentalidad de crecimiento la gente cree que nuevas habilidades se desarrollan con práctica.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 45,
+      "type": "tts",
+      "data": {
+        "text": "Esta visión crea amor por aprender que grandes líderes y artistas tienen en común.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    },
+    {
+      "start": 51,
+      "type": "tts",
+      "data": {
+        "text": "Para ellos la vida se vuelve un viaje emocionante con oportunidades infinitas de descubrir cosas nuevas y avanzar.",
+        "providerConfig": {
+          "voiceId": "Pedro",
+          "engine": "generative",
+          "languageCode": "es-US"
+        }
+      }
+    }
+  ],
+  "output": {
+    "filename": "explainer_video_spanish.mp4",
+    "encoding": {
+      "preset": "ultrafast"
+    }
+  }
+}

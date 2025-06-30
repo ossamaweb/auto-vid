@@ -52,18 +52,10 @@ aws s3 sync ./media/inputs/ s3://$BUCKET_NAME/inputs/
 # Replace with your actual API URL from deployment output
 API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
 
-# Submit test job
+# Submit test job using production sample (replace your-bucket-name with actual bucket)
 curl -X POST $API_URL/submit \
   -H "Content-Type: application/json" \
-  -d '{
-    "jobInfo": {"projectId": "test", "title": "API Test"},
-    "assets": {
-      "video": {"id": "main", "source": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"},
-      "audio": []
-    },
-    "timeline": [],
-    "output": {"filename": "test.mp4"}
-  }'
+  -d @samples/production/00_api_demo_video.spec.json
 
 # Response: {"jobId": "abc-123-def", "status": "queued"}
 
@@ -76,25 +68,35 @@ curl $API_URL/status/JOB_ID
 ```json
 {
   "jobInfo": {
-    "projectId": "demo_project",
-    "title": "Welcome Video"
+    "projectId": "api_demo",
+    "title": "API Test"
   },
   "assets": {
-    "video": { "id": "main_video", "source": "s3://bucket/video.mp4" },
-    "audio": [{ "id": "bgm", "source": "s3://bucket/music.mp3" }]
+    "video": {
+      "id": "main_video",
+      "source": "s3://your-bucket-name/inputs/api_demo_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "track",
+        "source": "s3://your-bucket-name/assets/music/Alternate - Vibe Tracks.mp3"
+      }
+    ]
   },
-  "backgroundMusic": { "playlist": ["bgm"], "volume": 0.3 },
+  "backgroundMusic": { "playlist": ["track"] },
   "timeline": [
     {
-      "start": 0,
+      "start": 4,
       "type": "tts",
       "data": {
-        "text": "Welcome to Auto-Vid!",
-        "providerConfig": { "voiceId": "Joanna", "engine": "neural" }
+        "text": "Welcome to Auto-Vid! A serverless video enrichment pipeline.",
+        "duckingLevel": 0.1
       }
     }
   ],
-  "output": { "filename": "my-video.mp4" }
+  "output": {
+    "filename": "api_demo_video.mp4"
+  }
 }
 ```
 
@@ -143,7 +145,7 @@ sam deploy --guided
 │   └── outputs/             # Generated videos (gitignored)
 ├── tmp/                     # Temporary files during processing (gitignored)
 ├── docs/                     # Documentation
-├── sample_input/            # Example job specifications
+├── samples/            # Example job specifications
 ├── template.yaml            # SAM infrastructure
 ├── Dockerfile.videoprocessor # Container definition
 ├── test_*.py               # Local testing scripts
@@ -190,7 +192,7 @@ aws cloudformation describe-stacks --stack-name <your-stack-name>
 - **[Complete Job Schema](docs/SCHEMA.md)** - Job specification format
 - **[Business Use Cases](docs/BUSINESS.md)** - Real-world applications
 - **[Architecture Details](docs/ARCHITECTURE.md)** - Technical deep dive
-- **[Advanced Examples](docs/EXAMPLES.md)** - Complex job specifications
+- **[Sample Job Specifications](samples/)** - Example specs for local and production
 - **[All Documentation](docs/)** - Complete documentation index
 
 ## ⚠️ Cost Warning
