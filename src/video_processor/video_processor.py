@@ -8,6 +8,7 @@ from webhook_notifier import WebhookNotifier
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 # Default temp directory (use Lambda's writable /tmp)
 DEFAULT_TEMP_DIR = "/tmp"
@@ -74,7 +75,7 @@ class VideoProcessor:
             downloaded_video_path = self.asset_manager.download_asset(
                 job_spec.assets.video.source, job_temp_dir
             )
-            
+
             # Rename input video to avoid conflict with output filename
             video_path = os.path.join(job_temp_dir, f"input_{job_id}.mp4")
             os.rename(downloaded_video_path, video_path)

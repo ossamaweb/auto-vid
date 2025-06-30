@@ -5,6 +5,7 @@ from contextlib import closing
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 class TTSGenerator:
@@ -14,13 +15,21 @@ class TTSGenerator:
         Uses Lambda's built-in IAM role for authentication
         """
         try:
-            self.polly_client = boto3.client('polly', region_name='us-east-1')
+            self.polly_client = boto3.client("polly", region_name="us-east-1")
             logger.info("Successfully initialized Polly client in us-east-1")
         except Exception as e:
             logger.error(f"Failed to initialize AWS Polly client: {str(e)}")
             raise
 
-    def generate_speech(self, text, output_path, voice_id="Joanna", engine="neural", language_code=None, text_type="text"):
+    def generate_speech(
+        self,
+        text,
+        output_path,
+        voice_id="Joanna",
+        engine="neural",
+        language_code=None,
+        text_type="text",
+    ):
         """
         Generate speech from text using Amazon Polly and save as MP3
 
@@ -42,12 +51,12 @@ class TTSGenerator:
                 "OutputFormat": "mp3",
                 "VoiceId": voice_id,
                 "Engine": engine,
-                "TextType": text_type
+                "TextType": text_type,
             }
-            
+
             if language_code:
                 params["LanguageCode"] = language_code
-            
+
             # Request speech synthesis
             response = self.polly_client.synthesize_speech(**params)
 
@@ -75,6 +84,3 @@ class TTSGenerator:
         except (BotoCoreError, ClientError) as error:
             logger.error(f"Error generating speech: {str(error)}")
             raise
-
-
-

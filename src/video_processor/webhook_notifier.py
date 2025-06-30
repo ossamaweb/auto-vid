@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 from typing import Optional, Dict, Any
@@ -6,6 +7,7 @@ from datetime import datetime, timezone
 from response_formatter import create_standardized_response
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 class WebhookNotifier:
