@@ -12,7 +12,17 @@ https://{api-id}.execute-api.{region}.amazonaws.com/Prod
 
 ## Authentication
 
-Currently, no authentication is required. The API is publicly accessible.
+API key authentication is required for all endpoints. After deployment, retrieve your API key from the AWS Console.
+
+**Required Header:**
+```
+X-API-Key: your-actual-api-key-value
+```
+
+**Getting Your API Key:**
+1. Go to AWS Console → API Gateway
+2. Navigate to API Keys → auto-vid-api-key
+3. Click "Show" to reveal the key value
 
 ## Endpoints
 
@@ -25,6 +35,7 @@ Submit a new video processing job.
 **Request Headers:**
 
 - `Content-Type: application/json`
+- `X-API-Key: your-actual-api-key-value`
 
 **Request Body:**
 Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
@@ -75,6 +86,22 @@ Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
 {
   "error": "Validation failed",
   "details": "timeline cannot be empty"
+}
+```
+
+**403 Forbidden:**
+
+```json
+{
+  "message": "Forbidden"
+}
+```
+
+**429 Too Many Requests:**
+
+```json
+{
+  "message": "Too Many Requests"
 }
 ```
 
@@ -133,12 +160,28 @@ Retrieve the current status of a job.
 
 **Error Responses:**
 
+**403 Forbidden:**
+
+```json
+{
+  "message": "Forbidden"
+}
+```
+
 **404 Not Found:**
 
 ```json
 {
   "error": "Job not found",
   "details": "Job ID does not exist"
+}
+```
+
+**429 Too Many Requests:**
+
+```json
+{
+  "message": "Too Many Requests"
 }
 ```
 
@@ -160,7 +203,18 @@ Retrieve the current status of a job.
 
 ## Rate Limits
 
-No rate limits are currently enforced, but reasonable usage is expected.
+API key-based rate limiting is enforced to prevent abuse and manage costs:
+
+- **Rate Limit:** 2 requests per second
+- **Burst Limit:** 5 requests (short bursts allowed)
+- **Daily Quota:** 50 requests per day
+
+**Rate Limit Headers:**
+API Gateway returns standard rate limiting headers in responses.
+
+**Exceeding Limits:**
+- Returns `429 Too Many Requests` status
+- Retry after the rate limit window resets
 
 ## Examples
 
@@ -170,6 +224,7 @@ No rate limits are currently enforced, but reasonable usage is expected.
 # Basic API demo (replace your-bucket-name with actual bucket)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/00_api_demo_video.spec.json
 ```
 
@@ -179,6 +234,7 @@ curl -X POST https://your-api-url/submit \
 # Social media short with multiple sound effects
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/01_short_video.spec.json
 ```
 
@@ -188,18 +244,21 @@ curl -X POST https://your-api-url/submit \
 # French explainer video
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/02_explainer_video_french.spec.json
 
 # Spanish explainer video
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/02_explainer_video_spanish.spec.json
 ```
 
 ### Check Job Status
 
 ```bash
-curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000
+curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000 \
+  -H "X-API-Key: your-actual-api-key"
 ```
 
 ## Error Handling
