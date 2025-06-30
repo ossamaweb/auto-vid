@@ -101,13 +101,8 @@ def test_complete_pipeline():
     job_id = str(uuid.uuid4())
 
     # Load and prepare job spec for local testing
-    with open("sample_input/social_media_short.spec.json", "r") as f:
+    with open("samples/00_api_demo_video.spec.json", "r") as f:
         job_spec_dict = json.load(f)
-
-    # job_spec_dict = prepare_local_job_spec(job_spec_dict)
-
-    # # Create output directory
-    # os.makedirs("./output", exist_ok=True)
 
     try:
         # Create local processor
@@ -138,9 +133,5 @@ if __name__ == "__main__":
 
     # Test complete pipeline (recommended)
     success = test_complete_pipeline()
-
-    # if success:
-    #     print("\n🎯 Running video processor only test...")
-    #     success = test_video_processing()
 
     sys.exit(0 if success else 1)
