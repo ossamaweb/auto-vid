@@ -74,7 +74,7 @@ All AWS resources use consistent naming with service type identification:
 
 **Video Processor:**
 
-- **Memory**: 10,240 MB (maximum available for intensive processing)
+- **Memory**: 3,008 MB (compatible with all AWS accounts)
 - **Timeout**: 15 minutes (maximum allowed)
 - **Storage**: 10 GB ephemeral storage (large video files)
 - **Container Size**: ~360MB (optimized multi-stage build)

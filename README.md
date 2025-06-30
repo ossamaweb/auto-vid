@@ -61,7 +61,6 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - AWS CLI configured with appropriate permissions
 - SAM CLI installed
 - Python 3.12+
-- **Note:** Some AWS accounts have 3GB Lambda memory limits (can be increased via support ticket)
 
 ```bash
 # Verify your setup
@@ -207,17 +206,12 @@ sam deploy --guided
 - SAM handles container build, ECR management, and infrastructure automatically
 - Use `sam deploy` for updates after initial guided setup
 
-## ⚠️ Known Issues
+## ⚠️ Performance Notes
 
-### Lambda Memory Limit Error
+**Video Processing Performance:**
 
-If deployment fails with `MemorySize value failed to satisfy constraint` for **VideoProcessorFunction**, your account has a 3GB Lambda memory limit.
-
-**Solutions:**
-
-- **Request quota increase** via AWS Support Console (they'll raise it to 10GB)
-- **Try a different region** (some regions may have higher limits available)
-- **Accept current 3008 MB limit** (reduced performance but functional)
+- Uses 3008MB memory (compatible with all AWS accounts)
+- For higher performance, request Lambda memory quota increase via AWS Support
 
 ## 🧹 Cleanup
 
