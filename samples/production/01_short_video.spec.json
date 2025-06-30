@@ -7,7 +7,7 @@
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "s3://your-bucket-name/inputs/social_media_short.mp4"
+      "source": "s3://your-bucket-name/inputs/short_video.mp4"
     },
     "audio": [
       {

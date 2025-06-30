@@ -11,6 +11,69 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    A[User] -->|POST /submit| B[API Gateway]
+    B --> C[Submit Job Lambda]
+    C -->|Queue Job| D[SQS Queue]
+    C -->|Store Status| E[DynamoDB Jobs Table]
+
+    D -->|Trigger| F[Video Processor Lambda Container]
+    F -->|Download Assets| G[S3 Bucket]
+    F -->|Generate TTS| H[AWS Polly]
+    F -->|Update Status| E
+    F -->|Upload Result| G
+
+    I[User] -->|GET /status/jobId| B
+    B --> J[Get Status Lambda]
+    J -->|Read Status| E
+
+    F -->|Send Notification| K[Webhook Endpoint]
+
+    style F fill:#ff9999
+    style G fill:#87CEEB
+    style H fill:#98FB98
+    style E fill:#DDA0DD
+    style D fill:#F0E68C
+
+```
+
+## 🔧 AWS Lambda Implementation
+
+**AWS Lambda Usage in Auto-Vid:**
+
+**Three Lambda Functions Architecture:**
+
+1. **Submit Job Lambda** (Python Runtime)
+
+   - Validates incoming JSON job specifications using Pydantic models
+   - Stores job metadata in DynamoDB with "submitted" status
+   - Queues processing jobs to SQS for reliable delivery
+   - Returns comprehensive job information via API Gateway
+
+2. **Video Processor Lambda** (Container Runtime)
+
+   - Processes SQS messages containing video job specifications
+   - Downloads video/audio assets from S3 to Lambda's /tmp storage
+   - Generates AI speech using AWS Polly integration
+   - Performs complex video editing with MoviePy (audio mixing, ducking, crossfading)
+   - Uploads final processed videos back to S3
+   - Generates pre-signed S3 URLs for secure video downloads
+   - Updates job status in DynamoDB and sends webhook notifications
+
+3. **Get Status Lambda** (Python Runtime)
+   - Retrieves job status and metadata from DynamoDB
+   - Returns comprehensive job information via API Gateway
+
+**Lambda Container Benefits:**
+
+- Handles large video processing libraries (MoviePy, FFmpeg)
+- Optimized Docker image (360MB) for faster cold starts
+- Scales automatically from 0 to hundreds of concurrent video processing jobs
+- Pay-per-use model - zero cost when idle, cost-effective at scale
+
 ## 🚀 Quick Start
 
 ### Prerequisites

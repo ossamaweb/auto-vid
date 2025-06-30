@@ -7,7 +7,7 @@
   "assets": {
     "video": {
       "id": "main_video",
-      "source": "./media/inputs/social_media_short.mp4"
+      "source": "./media/inputs/short_video.mp4"
     },
     "audio": [
       {
@@ -111,6 +111,7 @@
     }
   ],
   "output": {
+    "destination": "./media/outputs/samples",
     "filename": "short_video.mp4",
     "encoding": {
       "preset": "medium"
