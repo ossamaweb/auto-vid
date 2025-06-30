@@ -57,6 +57,8 @@ Resources:
           Properties:
             Path: /submit
             Method: post
+            Auth:
+              ApiKeyRequired: true
 
   VideoProcessorFunction:
     Type: AWS::Serverless::Function
@@ -116,6 +118,8 @@ Resources:
           Properties:
             Path: /status/{jobId}
             Method: get
+            Auth:
+              ApiKeyRequired: true
 
   JobsTable:
     Type: AWS::DynamoDB::Table
@@ -137,6 +141,33 @@ Resources:
     Properties:
       QueueName: !Sub "${AppName}-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
       VisibilityTimeout: 960
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${AppName}-api-key"
+      Enabled: true
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub "${AppName}-usage-plan"
+      Throttle:
+        RateLimit: 2
+        BurstLimit: 5
+      Quota:
+        Limit: 50
+        Period: DAY
+      ApiStages:
+        - ApiId: !Ref ServerlessRestApi
+          Stage: Prod
+
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
 
 Outputs:
   SubmitJobApi:
@@ -164,3 +195,7 @@ Outputs:
     Value: !Ref JobsQueue
     Export:
       Name: !Sub "${AWS::StackName}-JobsQueue"
+
+  ApiKey:
+    Description: "API Key for accessing endpoints (get actual value from AWS Console)"
+    Value: !Ref ApiKey
