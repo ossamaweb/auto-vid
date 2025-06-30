@@ -150,7 +150,6 @@ Resources:
 
   UsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: ServerlessRestApiProdStage
     Properties:
       UsagePlanName: !Sub "${AppName}-usage-plan"
       Throttle:
@@ -161,7 +160,7 @@ Resources:
         Period: DAY
       ApiStages:
         - ApiId: !Ref ServerlessRestApi
-          Stage: Prod
+          Stage: !Ref ServerlessRestApiProdStage
 
   UsagePlanKey:
     Type: AWS::ApiGateway::UsagePlanKey
