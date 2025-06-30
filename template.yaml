@@ -145,16 +145,21 @@ Resources:
   ApiKey:
     Type: AWS::ApiGateway::ApiKey
     Properties:
-      Name: !Sub "${AppName}-api-key"
+      Name: !Sub "${AppName}-api-key-${AWS::StackName}"
       Enabled: true
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref ServerlessRestApi
+      DeploymentId: !Ref ServerlessRestApiDeployment
+      StageName: Prod
 
   UsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn:
-      - SubmitJobFunction
-      - GetStatusFunction
+    DependsOn: ApiStage
     Properties:
-      UsagePlanName: !Sub "${AppName}-usage-plan"
+      UsagePlanName: !Sub "${AppName}-usage-plan-${AWS::StackName}"
       Throttle:
         RateLimit: 2
         BurstLimit: 5
