@@ -70,22 +70,19 @@ aws polly describe-voices --region us-east-1
 
 ### Deploy to AWS
 
-**Two-Phase Deployment (Recommended):**
-
 ```bash
 # Clone and build
 git clone https://github.com/ossamaweb/auto-vid.git
 cd auto-vid
 sam build # Takes time to build the video processor Docker image
 
-# Phase 1: Deploy without authentication (always works)
+# Phase 1: Deploy without authentication
 sam deploy --guided --parameter-overrides DeployUsagePlan=false
 # Answer 'Y' to create managed ECR repositories
-# Note the API URLs from output - they work immediately without API keys
+# Note the API URLs from output
 
-# Phase 2: Add API key authentication (optional)
+# Phase 2: Add API key authentication
 sam deploy --parameter-overrides DeployUsagePlan=true
-# Now API requires X-API-Key header (get key from AWS Console)
 
 # After deployment, sync demo assets to S3
 # Replace with your actual S3 bucket from deployment output
@@ -101,32 +98,11 @@ perl -i -pe "s/your-bucket-name/$BUCKET_NAME/g" samples/production/*.json
 # Edit samples/production/*.json files and replace "your-bucket-name" with your actual bucket name
 ```
 
-**Why Two Phases?**
-
-- Phase 1 creates a working API without authentication issues
-- Phase 2 safely adds API key protection after the API Gateway stage exists
-- If Phase 2 fails, you still have a working API from Phase 1
-
 ### Submit Your First Job
-
-**After Phase 1 (No Authentication):**
 
 ```bash
 # Replace with your actual API URL from deployment output
 API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
-
-# Submit test job (no API key needed)
-curl -X POST $API_URL/submit \
-  -H "Content-Type: application/json" \
-  -d @samples/production/00_api_demo_video.spec.json
-
-# Check status (replace JOB_ID with actual job ID)
-curl $API_URL/status/JOB_ID
-```
-
-**After Phase 2 (With Authentication):**
-
-```bash
 # Get API key from AWS Console: API Gateway → API Keys → auto-vid-api-key-{stack-name} → Show
 API_KEY="your-actual-api-key-from-aws-console"
 
@@ -136,7 +112,7 @@ curl -X POST $API_URL/submit \
   -H "X-API-Key: $API_KEY" \
   -d @samples/production/00_api_demo_video.spec.json
 
-# Check status
+# Check status (replace JOB_ID with actual job ID)
 curl $API_URL/status/JOB_ID \
   -H "X-API-Key: $API_KEY"
 ```

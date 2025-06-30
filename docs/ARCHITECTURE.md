@@ -42,16 +42,16 @@ All AWS resources use consistent naming with service type identification:
 - API Key: `auto-vid-api-key-{stack-name}`
 - Usage Plan: `auto-vid-usage-plan-{stack-name}`
 
-
-
-### API Security (Phase 2)
+### API Security
 
 **Authentication:**
-- API key required for all endpoints when deployed with Phase 2
+
+- API key required for all endpoints
 - Key managed through AWS API Gateway console
 - Header: `X-API-Key: your-actual-key-value`
 
 **Rate Limiting:**
+
 - **Throttle:** 2 requests per second with 5 burst capacity
 - **Quota:** 50 requests per day
 - **Enforcement:** API Gateway usage plans

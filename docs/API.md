@@ -12,9 +12,9 @@ https://{api-id}.execute-api.{region}.amazonaws.com/Prod
 
 ## Authentication
 
-API key authentication is required when deployed with Phase 2. After Phase 2 deployment, retrieve your API key from the AWS Console.
+API key authentication is required for all endpoints. After deployment, retrieve your API key from the AWS Console.
 
-**Required Header (Phase 2 only):**
+**Required Header:**
 ```
 X-API-Key: your-actual-api-key-value
 ```
@@ -35,7 +35,7 @@ Submit a new video processing job.
 **Request Headers:**
 
 - `Content-Type: application/json`
-- `X-API-Key: your-actual-api-key-value` (Phase 2 only)
+- `X-API-Key: your-actual-api-key-value`
 
 **Request Body:**
 Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
@@ -97,7 +97,7 @@ Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
 }
 ```
 
-**429 Too Many Requests (Phase 2 only):**
+**429 Too Many Requests:**
 
 ```json
 {
@@ -105,7 +105,7 @@ Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
 }
 ```
 
-**500 Internal Server Error:
+**500 Internal Server Error:**
 
 ```json
 {
@@ -177,7 +177,7 @@ Retrieve the current status of a job.
 }
 ```
 
-**429 Too Many Requests (Phase 2 only):**
+**429 Too Many Requests:**
 
 ```json
 {
@@ -185,7 +185,7 @@ Retrieve the current status of a job.
 }
 ```
 
-**500 Internal Server Error:
+**500 Internal Server Error:**
 
 ```json
 {
@@ -201,9 +201,9 @@ Retrieve the current status of a job.
 3. **completed** - Video successfully generated and available for download
 4. **failed** - Processing failed (check `error` field for details)
 
-## Rate Limits (Phase 2 Only)
+## Rate Limits
 
-When deployed with Phase 2, API key-based rate limiting is enforced:
+API key-based rate limiting is enforced:
 
 - **Rate Limit:** 2 requests per second
 - **Burst Limit:** 5 requests (short bursts allowed)
@@ -221,12 +221,6 @@ API Gateway returns standard rate limiting headers in responses.
 ### Submit Job Using Sample Specs
 
 ```bash
-# Phase 1 (No authentication)
-curl -X POST https://your-api-url/submit \
-  -H "Content-Type: application/json" \
-  -d @samples/production/00_api_demo_video.spec.json
-
-# Phase 2 (With authentication)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-actual-api-key" \
@@ -236,12 +230,6 @@ curl -X POST https://your-api-url/submit \
 ### Submit Social Media Short with Sound Effects
 
 ```bash
-# Phase 1 (No authentication)
-curl -X POST https://your-api-url/submit \
-  -H "Content-Type: application/json" \
-  -d @samples/production/01_short_video.spec.json
-
-# Phase 2 (With authentication)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-actual-api-key" \
@@ -251,12 +239,6 @@ curl -X POST https://your-api-url/submit \
 ### Submit Multi-language TTS Video
 
 ```bash
-# Phase 1 (No authentication)
-curl -X POST https://your-api-url/submit \
-  -H "Content-Type: application/json" \
-  -d @samples/production/02_explainer_video_french.spec.json
-
-# Phase 2 (With authentication)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-actual-api-key" \
@@ -266,10 +248,6 @@ curl -X POST https://your-api-url/submit \
 ### Check Job Status
 
 ```bash
-# Phase 1 (No authentication)
-curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000
-
-# Phase 2 (With authentication)
 curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000 \
   -H "X-API-Key: your-actual-api-key"
 ```
