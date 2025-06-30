@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Default: auto-vid
     Description: Application name used for resource naming
+  StageName:
+    Type: String
+    Default: Prod
+    Description: API Gateway stage name
 
 Resources:
   S3Bucket:
@@ -55,10 +59,9 @@ Resources:
         SubmitJob:
           Type: Api
           Properties:
+            RestApiId: !Ref AutoVidApi
             Path: /submit
             Method: post
-            Auth:
-              ApiKeyRequired: true
 
   VideoProcessorFunction:
     Type: AWS::Serverless::Function
@@ -116,10 +119,9 @@ Resources:
         GetStatus:
           Type: Api
           Properties:
+            RestApiId: !Ref AutoVidApi
             Path: /status/{jobId}
             Method: get
-            Auth:
-              ApiKeyRequired: true
 
   JobsTable:
     Type: AWS::DynamoDB::Table
@@ -142,41 +144,31 @@ Resources:
       QueueName: !Sub "${AppName}-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
       VisibilityTimeout: 960
 
-  ApiKey:
-    Type: AWS::ApiGateway::ApiKey
+  AutoVidApi:
+    Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub "${AppName}-api-key"
-      Enabled: true
-
-  UsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      UsagePlanName: !Sub "${AppName}-usage-plan"
-      Throttle:
-        RateLimit: 2
-        BurstLimit: 5
-      Quota:
-        Limit: 50
-        Period: DAY
-      ApiStages:
-        - ApiId: !Ref ServerlessRestApi
-          Stage: !Ref ServerlessRestApiProdStage
-
-  UsagePlanKey:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Properties:
-      KeyId: !Ref ApiKey
-      KeyType: API_KEY
-      UsagePlanId: !Ref UsagePlan
+      Name: !Sub "${AppName}-api-${AWS::StackName}"
+      StageName: !Ref StageName
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          UsagePlanName: !Sub "${AppName}-usage-plan-${AWS::StackName}"
+          Quota:
+            Limit: 50
+            Period: DAY
+          Throttle:
+            BurstLimit: 5
+            RateLimit: 2
 
 Outputs:
   SubmitJobApi:
     Description: "API Gateway endpoint URL for Submit Job function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/submit/"
+    Value: !Sub "https://${AutoVidApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/submit/"
 
   GetStatusApi:
     Description: "API Gateway endpoint URL for Get Status function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/status/"
+    Value: !Sub "https://${AutoVidApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/status/"
 
   S3Bucket:
     Description: "S3 bucket for Auto-Vid assets and outputs"
@@ -198,4 +190,4 @@ Outputs:
 
   ApiKey:
     Description: "API Key for accessing endpoints (get actual value from AWS Console)"
-    Value: !Ref ApiKey
+    Value: !Ref AutoVidApiApiKey
