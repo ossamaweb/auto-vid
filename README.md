@@ -13,7 +13,7 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **🎵 Smart Audio Mixing** - Background music with crossfading, ducking, and volume control
 - **🔔 Webhook Notifications** - Real-time job completion notifications with retry logic
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
-
+- **🔐 API Security** - API key authentication with rate limiting (2 req/sec, 50/day)
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
 ## 🏗️ Architecture
@@ -70,39 +70,75 @@ aws polly describe-voices --region us-east-1
 
 ### Deploy to AWS
 
+**Two-Phase Deployment (Recommended):**
+
 ```bash
-# Clone and deploy
+# Clone and build
 git clone https://github.com/ossamaweb/auto-vid.git
 cd auto-vid
-
 sam build # Takes time to build the video processor Docker image
-sam deploy --guided
+
+# Phase 1: Deploy without authentication (always works)
+sam deploy --guided --parameter-overrides DeployUsagePlan=false
 # Answer 'Y' to create managed ECR repositories
+# Note the API URLs from output - they work immediately without API keys
+
+# Phase 2: Add API key authentication (optional)
+sam deploy --parameter-overrides DeployUsagePlan=true
+# Now API requires X-API-Key header (get key from AWS Console)
 
 # After deployment, sync demo assets to S3
 # Replace with your actual S3 bucket from deployment output
-BUCKET_NAME="auto-vid-s3-bucket-stack-name-123456789"
+BUCKET_NAME="your-bucket-name"
 aws s3 sync ./media/assets/ s3://$BUCKET_NAME/assets/
 aws s3 sync ./media/inputs/ s3://$BUCKET_NAME/inputs/
 
-# Copy the SubmitJobApi and GetStatusApi URLs from the output
+# Update sample job files with your bucket name
+# Option 1: Automatic update (cross-platform)
+perl -i -pe "s/your-bucket-name/$BUCKET_NAME/g" samples/production/*.json
+
+# Option 2: Manual update
+# Edit samples/production/*.json files and replace "your-bucket-name" with your actual bucket name
 ```
+
+**Why Two Phases?**
+
+- Phase 1 creates a working API without authentication issues
+- Phase 2 safely adds API key protection after the API Gateway stage exists
+- If Phase 2 fails, you still have a working API from Phase 1
 
 ### Submit Your First Job
 
+**After Phase 1 (No Authentication):**
+
 ```bash
-# Replace with your actual API URL
+# Replace with your actual API URL from deployment output
 API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
 
-# Submit test job using production sample (replace your-bucket-name with actual bucket)
+# Submit test job (no API key needed)
 curl -X POST $API_URL/submit \
   -H "Content-Type: application/json" \
   -d @samples/production/00_api_demo_video.spec.json
 
-# Response: {"jobId": "abc-123-def", "status": "queued"}
-
-# Check status (replace JOB_ID with the actual job ID from above)
+# Check status (replace JOB_ID with actual job ID)
 curl $API_URL/status/JOB_ID
+```
+
+**After Phase 2 (With Authentication):**
+
+```bash
+# Get API key from AWS Console: API Gateway → API Keys → auto-vid-api-key-{stack-name} → Show
+API_KEY="your-actual-api-key-from-aws-console"
+
+# Submit test job (API key required)
+curl -X POST $API_URL/submit \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d @samples/production/00_api_demo_video.spec.json
+
+# Check status
+curl $API_URL/status/JOB_ID \
+  -H "X-API-Key: $API_KEY"
 ```
 
 ## 📋 Basic Job Format
