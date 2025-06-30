@@ -10,20 +10,6 @@ After deployment, your API will be available at:
 https://{api-id}.execute-api.{region}.amazonaws.com/Prod
 ```
 
-## Authentication
-
-API key authentication is required for all endpoints. After deployment, retrieve your API key from the AWS Console.
-
-**Required Header:**
-```
-X-API-Key: your-actual-api-key-value
-```
-
-**Getting Your API Key:**
-1. Go to AWS Console → API Gateway
-2. Navigate to API Keys → auto-vid-api-key
-3. Click "Show" to reveal the key value
-
 ## Endpoints
 
 ### Submit Job
@@ -35,7 +21,6 @@ Submit a new video processing job.
 **Request Headers:**
 
 - `Content-Type: application/json`
-- `X-API-Key: your-actual-api-key-value`
 
 **Request Body:**
 Complete job specification as defined in [SCHEMA.md](SCHEMA.md).
@@ -193,7 +178,6 @@ Retrieve the current status of a job.
 # Basic API demo (replace your-bucket-name with actual bucket)
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/00_api_demo_video.spec.json
 ```
 
@@ -203,7 +187,6 @@ curl -X POST https://your-api-url/submit \
 # Social media short with multiple sound effects
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/01_short_video.spec.json
 ```
 
@@ -213,21 +196,18 @@ curl -X POST https://your-api-url/submit \
 # French explainer video
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/02_explainer_video_french.spec.json
 
 # Spanish explainer video
 curl -X POST https://your-api-url/submit \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-actual-api-key" \
   -d @samples/production/02_explainer_video_spanish.spec.json
 ```
 
 ### Check Job Status
 
 ```bash
-curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000 \
-  -H "X-API-Key: your-actual-api-key"
+curl https://your-api-url/status/550e8400-e29b-41d4-a716-446655440000
 ```
 
 ## Error Handling

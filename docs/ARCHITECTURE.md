@@ -11,7 +11,7 @@
 ## AWS Services Used
 
 - **Lambda** - Serverless compute with 15-minute timeout support
-- **API Gateway** - RESTful API endpoints with API key authentication
+- **API Gateway** - RESTful API endpoints
 - **SQS** - Reliable job queuing with dead letter handling
 - **S3** - Asset storage with lifecycle management
 - **Polly** - Neural and generative text-to-speech
@@ -39,15 +39,6 @@ All AWS resources use consistent naming with service type identification:
 - SQS Queue: `auto-vid-sqs-jobs-{stack-name}-{account-id}`
 - DynamoDB Table: `auto-vid-dynamodb-jobs-{stack-name}-{account-id}`
 - Lambda Layer: `auto-vid-layer-shared-{stack-name}-{account-id}`
-- API Key: `auto-vid-api-key`
-- Usage Plan: `auto-vid-usage-plan`
-
-### API Security
-
-**Authentication:**
-- API key required for all endpoints
-- Key managed through AWS API Gateway console
-- Header: `X-API-Key: your-actual-key-value`
 
 
 
@@ -85,7 +76,7 @@ All AWS resources use consistent naming with service type identification:
 
 - **✅ Input Validation** - Comprehensive Pydantic models
 - **✅ Error Handling** - Retry logic and detailed error messages
-- **✅ Security** - API key authentication, IAM least privilege, and input sanitization
+- **✅ Security** - IAM least privilege and input sanitization
 
 - **✅ Monitoring** - CloudWatch logs and metrics
 - **✅ Scalability** - SQS queuing and Lambda concurrency

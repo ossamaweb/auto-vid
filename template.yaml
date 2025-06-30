@@ -57,8 +57,6 @@ Resources:
           Properties:
             Path: /submit
             Method: post
-            Auth:
-              ApiKeyRequired: true
 
   VideoProcessorFunction:
     Type: AWS::Serverless::Function
@@ -118,8 +116,6 @@ Resources:
           Properties:
             Path: /status/{jobId}
             Method: get
-            Auth:
-              ApiKeyRequired: true
 
   JobsTable:
     Type: AWS::DynamoDB::Table
@@ -142,11 +138,7 @@ Resources:
       QueueName: !Sub "${AppName}-sqs-jobs-${AWS::StackName}-${AWS::AccountId}"
       VisibilityTimeout: 960
 
-  ApiKey:
-    Type: AWS::ApiGateway::ApiKey
-    Properties:
-      Name: !Sub "${AppName}-api-key-${AWS::StackName}"
-      Enabled: true
+
 
 Outputs:
   SubmitJobApi:
@@ -175,6 +167,4 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-JobsQueue"
 
-  ApiKey:
-    Description: "API Key for accessing endpoints (get actual value from AWS Console)"
-    Value: !Ref ApiKey
+

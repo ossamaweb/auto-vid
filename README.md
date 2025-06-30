@@ -13,7 +13,7 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **🎵 Smart Audio Mixing** - Background music with crossfading, ducking, and volume control
 - **🔔 Webhook Notifications** - Real-time job completion notifications with retry logic
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
-- **🔐 API Security** - API key authentication
+
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
 ## 🏗️ Architecture
@@ -85,28 +85,24 @@ BUCKET_NAME="auto-vid-s3-bucket-stack-name-123456789"
 aws s3 sync ./media/assets/ s3://$BUCKET_NAME/assets/
 aws s3 sync ./media/inputs/ s3://$BUCKET_NAME/inputs/
 
-# Get your API key from AWS Console: API Gateway → API Keys → auto-vid-api-key → Show
 # Copy the SubmitJobApi and GetStatusApi URLs from the output
 ```
 
 ### Submit Your First Job
 
 ```bash
-# Replace with your actual API URL and API key
+# Replace with your actual API URL
 API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
-API_KEY="your-actual-api-key-from-aws-console"
 
 # Submit test job using production sample (replace your-bucket-name with actual bucket)
 curl -X POST $API_URL/submit \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
   -d @samples/production/00_api_demo_video.spec.json
 
 # Response: {"jobId": "abc-123-def", "status": "queued"}
 
 # Check status (replace JOB_ID with the actual job ID from above)
-curl $API_URL/status/JOB_ID \
-  -H "X-API-Key: $API_KEY"
+curl $API_URL/status/JOB_ID
 ```
 
 ## 📋 Basic Job Format
