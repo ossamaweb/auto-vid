@@ -29,6 +29,7 @@
 - `WEBHOOK_MAX_METADATA_SIZE` - Maximum webhook metadata size (default: 1024)
 - `S3_PRESIGNED_URL_EXPIRATION` - Pre-signed URL expiration (default: 86400)
 - `DYNAMODB_JOBS_TTL_SECONDS` - Job record TTL (default: 604800 = 7 days)
+- `LOG_LEVEL` - Logging verbosity level (default: INFO, options: DEBUG, INFO, WARNING, ERROR)
 
 ### Resource Naming
 

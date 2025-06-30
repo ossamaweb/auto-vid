@@ -11,6 +11,69 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 - **☁️ Managed S3 Storage** - Automatic bucket creation with organized asset management
 - **📊 Scalable Architecture** - SQS queuing, Lambda concurrency, and retry logic
 
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    A[User] -->|POST /submit| B[API Gateway]
+    B --> C[Submit Job Lambda]
+    C -->|Queue Job| D[SQS Queue]
+    C -->|Store Status| E[DynamoDB Jobs Table]
+
+    D -->|Trigger| F[Video Processor Lambda Container]
+    F -->|Download Assets| G[S3 Bucket]
+    F -->|Generate TTS| H[AWS Polly]
+    F -->|Update Status| E
+    F -->|Upload Result| G
+
+    I[User] -->|GET /status/jobId| B
+    B --> J[Get Status Lambda]
+    J -->|Read Status| E
+
+    F -->|Send Notification| K[Webhook Endpoint]
+
+    style F fill:#ff9999
+    style G fill:#87CEEB
+    style H fill:#98FB98
+    style E fill:#DDA0DD
+    style D fill:#F0E68C
+
+```
+
+## 🔧 AWS Lambda Implementation
+
+**AWS Lambda Usage in Auto-Vid:**
+
+**Three Lambda Functions Architecture:**
+
+1. **Submit Job Lambda** (Python Runtime)
+
+   - Validates incoming JSON job specifications using Pydantic models
+   - Stores job metadata in DynamoDB with "submitted" status
+   - Queues processing jobs to SQS for reliable delivery
+   - Returns comprehensive job information via API Gateway
+
+2. **Video Processor Lambda** (Container Runtime)
+
+   - Processes SQS messages containing video job specifications
+   - Downloads video/audio assets from S3 to Lambda's /tmp storage
+   - Generates AI speech using AWS Polly integration
+   - Performs complex video editing with MoviePy (audio mixing, ducking, crossfading)
+   - Uploads final processed videos back to S3
+   - Generates pre-signed S3 URLs for secure video downloads
+   - Updates job status in DynamoDB and sends webhook notifications
+
+3. **Get Status Lambda** (Python Runtime)
+   - Retrieves job status and metadata from DynamoDB
+   - Returns comprehensive job information via API Gateway
+
+**Lambda Container Benefits:**
+
+- Handles large video processing libraries (MoviePy, FFmpeg)
+- Optimized Docker image (360MB) for faster cold starts
+- Scales automatically from 0 to hundreds of concurrent video processing jobs
+- Pay-per-use model - zero cost when idle, cost-effective at scale
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -37,7 +100,12 @@ sam build # Takes time to build the video processor Docker image
 sam deploy --guided
 # Answer 'Y' to create managed ECR repositories
 
-# After deployment completes, SAM will show your API endpoints
+# After deployment, sync demo assets to S3
+# Replace with your actual S3 bucket from deployment output
+BUCKET_NAME="auto-vid-s3-bucket-stack-name-123456789"
+aws s3 sync ./media/assets/ s3://$BUCKET_NAME/assets/
+aws s3 sync ./media/inputs/ s3://$BUCKET_NAME/inputs/
+
 # Copy the SubmitJobApi and GetStatusApi URLs from the output
 ```
 
@@ -47,18 +115,10 @@ sam deploy --guided
 # Replace with your actual API URL from deployment output
 API_URL="https://your-api-id.execute-api.us-east-2.amazonaws.com/Prod"
 
-# Submit test job
+# Submit test job using production sample (replace your-bucket-name with actual bucket)
 curl -X POST $API_URL/submit \
   -H "Content-Type: application/json" \
-  -d '{
-    "jobInfo": {"projectId": "test", "title": "API Test"},
-    "assets": {
-      "video": {"id": "main", "source": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"},
-      "audio": []
-    },
-    "timeline": [],
-    "output": {"filename": "test.mp4"}
-  }'
+  -d @samples/production/00_api_demo_video.spec.json
 
 # Response: {"jobId": "abc-123-def", "status": "queued"}
 
@@ -71,25 +131,35 @@ curl $API_URL/status/JOB_ID
 ```json
 {
   "jobInfo": {
-    "projectId": "demo_project",
-    "title": "Welcome Video"
+    "projectId": "api_demo",
+    "title": "API Test"
   },
   "assets": {
-    "video": { "id": "main_video", "source": "s3://bucket/video.mp4" },
-    "audio": [{ "id": "bgm", "source": "s3://bucket/music.mp3" }]
+    "video": {
+      "id": "main_video",
+      "source": "s3://your-bucket-name/inputs/api_demo_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "track",
+        "source": "s3://your-bucket-name/assets/music/Alternate - Vibe Tracks.mp3"
+      }
+    ]
   },
-  "backgroundMusic": { "playlist": ["bgm"], "volume": 0.3 },
+  "backgroundMusic": { "playlist": ["track"] },
   "timeline": [
     {
-      "start": 0,
+      "start": 4,
       "type": "tts",
       "data": {
-        "text": "Welcome to Auto-Vid!",
-        "providerConfig": { "voiceId": "Joanna", "engine": "neural" }
+        "text": "Welcome to Auto-Vid! A serverless video enrichment pipeline.",
+        "duckingLevel": 0.1
       }
     }
   ],
-  "output": { "filename": "my-video.mp4" }
+  "output": {
+    "filename": "api_demo_video.mp4"
+  }
 }
 ```
 
@@ -132,13 +202,13 @@ sam deploy --guided
 │   ├── response_formatter.py # Standardized responses
 │   ├── polly_constants.py    # Voice/language definitions
 │   └── requirements.txt      # Shared dependencies
+├── media/                    # Media files (matches S3 structure)
+│   ├── assets/              # Demo audio files (music + sfx)
+│   ├── inputs/              # Sample input videos
+│   └── outputs/             # Generated videos (gitignored)
+├── tmp/                     # Temporary files during processing (gitignored)
 ├── docs/                     # Documentation
-├── lib/                      # Sample assets
-│   ├── music/               # Background music files
-│   └── sfx/                 # Sound effects
-├── sample_input/            # Example job specifications
-├── tmp/                     # Temporary files during processing
-├── dist/                    # Locally generated videos
+├── samples/            # Example job specifications
 ├── template.yaml            # SAM infrastructure
 ├── Dockerfile.videoprocessor # Container definition
 ├── test_*.py               # Local testing scripts
@@ -181,10 +251,11 @@ aws cloudformation describe-stacks --stack-name <your-stack-name>
 
 ## 📚 Documentation
 
-- **[Complete Job Schema](docs/SCHEMA.md)** - Full API specification
+- **[API Reference](docs/API.md)** - REST API endpoints and responses
+- **[Complete Job Schema](docs/SCHEMA.md)** - Job specification format
 - **[Business Use Cases](docs/BUSINESS.md)** - Real-world applications
 - **[Architecture Details](docs/ARCHITECTURE.md)** - Technical deep dive
-- **[Advanced Examples](docs/EXAMPLES.md)** - Complex job specifications
+- **[Sample Job Specifications](samples/)** - Example specs for local and production
 - **[All Documentation](docs/)** - Complete documentation index
 
 ## ⚠️ Cost Warning

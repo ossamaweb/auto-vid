@@ -21,9 +21,7 @@ def lambda_handler(event, context):
             return create_error_response(404, f"Job {job_id} not found")
 
         # Remove DynamoDB-specific fields and return standardized response
-        standardized_response = {
-            k: v for k, v in job_data.items() if k not in ["jobSpec", "ttl"]
-        }
+        standardized_response = {k: v for k, v in job_data.items() if k not in ["ttl"]}
 
         return {
             "statusCode": 200,

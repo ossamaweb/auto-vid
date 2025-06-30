@@ -11,7 +11,7 @@ class JobManager:
         self.dynamodb = boto3.resource("dynamodb")
         self.table_name = os.environ["DYNAMODB_JOBS_TABLE"]
         self.table = self.dynamodb.Table(self.table_name)
-    
+
     def _convert_for_dynamodb(self, data):
         """Convert floats to Decimal for DynamoDB compatibility"""
         if isinstance(data, dict):
@@ -20,6 +20,17 @@ class JobManager:
             return [self._convert_for_dynamodb(item) for item in data]
         elif isinstance(data, float):
             return Decimal(str(data))
+        else:
+            return data
+
+    def _convert_from_dynamodb(self, data):
+        """Convert Decimal back to float for API responses"""
+        if isinstance(data, dict):
+            return {k: self._convert_from_dynamodb(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._convert_from_dynamodb(item) for item in data]
+        elif isinstance(data, Decimal):
+            return float(data)
         else:
             return data
 
@@ -33,7 +44,7 @@ class JobManager:
         ttl_seconds = int(os.environ.get("DYNAMODB_JOBS_TTL_SECONDS", "604800"))
         ttl = int(datetime.now(timezone.utc).timestamp()) + ttl_seconds
 
-        item = create_standardized_response(
+        response_item = create_standardized_response(
             job_id=job_id,
             status="submitted",
             submitted_at=timestamp,
@@ -42,11 +53,13 @@ class JobManager:
         )
 
         # Add DynamoDB-specific fields and convert types
-        item["ttl"] = ttl
-        item = self._convert_for_dynamodb(item)
+        db_item = response_item.copy()
+        db_item["ttl"] = ttl
+        db_item = self._convert_for_dynamodb(db_item)
 
-        self.table.put_item(Item=item)
-        return item
+        self.table.put_item(Item=db_item)
+
+        return response_item
 
     def update_job_completion(
         self,
@@ -102,6 +115,7 @@ class JobManager:
         """Get job status and details"""
         try:
             response = self.table.get_item(Key={"jobId": job_id})
-            return response.get("Item")
+            item = response.get("Item")
+            return self._convert_from_dynamodb(item)
         except Exception:
             return None

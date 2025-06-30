@@ -71,9 +71,13 @@ class VideoProcessor:
 
             # Phase 2: Download video asset
             logger.info("Downloading video asset...")
-            video_path = self.asset_manager.download_asset(
+            downloaded_video_path = self.asset_manager.download_asset(
                 job_spec.assets.video.source, job_temp_dir
             )
+            
+            # Rename input video to avoid conflict with output filename
+            video_path = os.path.join(job_temp_dir, f"input_{job_id}.mp4")
+            os.rename(downloaded_video_path, video_path)
 
             # Phase 3: Load video and get duration
             video = VideoFileClip(video_path)
@@ -372,13 +376,20 @@ class VideoProcessor:
 
         # Apply ducking for each merged range
         for range_info in merged_ranges:
-            background_music = background_music.with_effects(
-                [
-                    afx.AudioFadeIn(range_info["fade_duration"]),
-                    afx.AudioFadeOut(range_info["fade_duration"]),
-                ]
-            ).with_volume_scaled(
-                range_info["ducking_level"], range_info["start"], range_info["end"]
-            )
+            if range_info["fade_duration"] > 0:
+                # Apply fade effects when fade duration is specified
+                background_music = background_music.with_effects(
+                    [
+                        afx.AudioFadeIn(range_info["fade_duration"]),
+                        afx.AudioFadeOut(range_info["fade_duration"]),
+                    ]
+                ).with_volume_scaled(
+                    range_info["ducking_level"], range_info["start"], range_info["end"]
+                )
+            else:
+                # Apply instant volume change when fade duration is 0
+                background_music = background_music.with_volume_scaled(
+                    range_info["ducking_level"], range_info["start"], range_info["end"]
+                )
 
         return background_music

@@ -14,6 +14,13 @@ sys.path.insert(0, os.path.abspath(layers_path))
 from job_validator import validate_job_spec  # noqa: E402
 from job_manager import JobManager  # noqa: E402
 
+
+# Configure logging for the entire application
+level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, level),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 

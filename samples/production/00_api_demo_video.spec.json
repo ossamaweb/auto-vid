@@ -1,0 +1,32 @@
+{
+  "jobInfo": {
+    "projectId": "api_demo",
+    "title": "API Test"
+  },
+  "assets": {
+    "video": {
+      "id": "main_video",
+      "source": "s3://your-bucket-name/inputs/api_demo_video.mp4"
+    },
+    "audio": [
+      {
+        "id": "track",
+        "source": "s3://your-bucket-name/assets/music/Alternate - Vibe Tracks.mp3"
+      }
+    ]
+  },
+  "backgroundMusic": { "playlist": ["track"] },
+  "timeline": [
+    {
+      "start": 4,
+      "type": "tts",
+      "data": {
+        "text": "Welcome to Auto-Vid! A serverless video enrichment pipeline.",
+        "duckingLevel": 0.1
+      }
+    }
+  ],
+  "output": {
+    "filename": "api_demo_video.mp4"
+  }
+}

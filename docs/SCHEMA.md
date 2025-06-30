@@ -65,7 +65,7 @@ Defines a voiceover event.
     - `"textType"` (String, Default: "text"): Text format type. Options: "text" or "ssml" for Speech Synthesis Markup Language support.
   - `"volume"` (Float, 0.0-1.0, Default: 1.0): The volume of this specific TTS clip.
   - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
-  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.5): Time in seconds for the ducking fade transition.
 
 ##### Event Type: `audio`
 
@@ -77,7 +77,7 @@ Defines a sound effect or other pre-recorded audio clip event.
   - `"assetId"` (String, Required): The ID of the audio asset to play from the `assets` section.
   - `"volume"` (Float, 0.0-1.0, Default: 0.5): The volume of this specific audio clip.
   - `"duckingLevel"` (Float, 0.0-1.0, Optional): If specified, background music will duck to this volume level during this clip.
-  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.0): Time in seconds for the ducking fade transition.
+  - `"duckingFadeDuration"` (Float, ≥0.0, Default: 0.5): Time in seconds for the ducking fade transition.
 
 #### 5. `output` (Object, Required)
 
@@ -119,6 +119,14 @@ The webhook will receive a JSON payload with the following structure:
     "duration": 45.2,
     "size": 15728640
   },
+  "jobInfo": {
+    "title": "Job title",
+    "projectId": "projectId",
+    "tags": [
+        "tag a",
+        "tag b"
+    ]
+  },
   "error": null,
   "metadata": {...}
 }
@@ -137,6 +145,7 @@ The webhook will receive a JSON payload with the following structure:
 - `output.s3Uri` - Internal S3 URI reference (null for local files)
 - `output.duration` - Video length in seconds (null on failure)
 - `output.size` - File size in bytes (null on failure)
+- `jobInfo` - Original job information (title, projectId, tags)
 - `error` - Error message (failure only)
 - `metadata` - Custom user-provided metadata
 
@@ -166,7 +175,7 @@ The system supports both managed and custom S3 buckets:
 - Bucket name: `auto-vid-s3-bucket-{stack-name}-{account-id}`
 - Available to Lambda functions via `S3_BUCKET_NAME` environment variable
 - Used when `destination` is omitted from output configuration
-- Organized with `/assets/` and `/outputs/` prefixes
+- Organized with `/assets/`, `inputs` and `/outputs/` prefixes
 - Example bucket name: `auto-vid-s3-bucket-mystack-123456789012`
 
 **Custom Bucket (Advanced users):**
