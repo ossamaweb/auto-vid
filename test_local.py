@@ -96,12 +96,12 @@ class LocalJobProcessor:
         }
 
 
-def test_complete_pipeline():
+def test_complete_pipeline(spec_file):
     """Test complete pipeline using process_single_job"""
     job_id = str(uuid.uuid4())
 
     # Load and prepare job spec for local testing
-    with open("samples/00_api_demo_video.spec.json", "r") as f:
+    with open(spec_file, "r") as f:
         job_spec_dict = json.load(f)
 
     try:
@@ -129,9 +129,20 @@ def test_complete_pipeline():
 
 
 if __name__ == "__main__":
-    print("🎬 Testing Auto-Vid Complete Pipeline...")
+    if len(sys.argv) != 2:
+        print("❌ Error: Please provide a job specification file")
+        print("Usage: python3 test_local.py <spec_file>")
+        print("Example: python3 test_local.py samples/local/00_api_demo_video.spec.json")
+        sys.exit(1)
+    
+    spec_file = sys.argv[1]
+    if not os.path.exists(spec_file):
+        print(f"❌ Error: File '{spec_file}' not found")
+        sys.exit(1)
+    
+    print(f"🎬 Testing Auto-Vid Complete Pipeline with {spec_file}...")
 
     # Test complete pipeline (recommended)
-    success = test_complete_pipeline()
+    success = test_complete_pipeline(spec_file)
 
     sys.exit(0 if success else 1)
