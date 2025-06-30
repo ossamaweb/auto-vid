@@ -9,6 +9,7 @@ import time
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 
 class AssetManager:
