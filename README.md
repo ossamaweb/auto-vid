@@ -1,5 +1,9 @@
 # Auto-Vid: Serverless Video Processing Platform
 
+[![Demo Video](https://img.youtube.com/vi/f2SbedesG5Y/0.jpg)](https://www.youtube.com/watch?v=f2SbedesG5Y)
+
+**🎥 [Watch the Demo Video](https://www.youtube.com/watch?v=f2SbedesG5Y)** - See Auto-Vid in action with live AWS Lambda demonstration
+
 A production-ready serverless video enrichment pipeline that uses a declarative JSON format to automatically add AI-powered TTS, music, and sound effects to video.
 
 ## ✨ Key Features
@@ -13,32 +17,7 @@ A production-ready serverless video enrichment pipeline that uses a declarative 
 
 ## 🏗️ Architecture
 
-```mermaid
-graph TD
-    A[User] -->|POST /submit| B[API Gateway]
-    B --> C[Submit Job Lambda]
-    C -->|Queue Job| D[SQS Queue]
-    C -->|Store Status| E[DynamoDB Jobs Table]
-
-    D -->|Trigger| F[Video Processor Lambda Container]
-    F -->|Download Assets| G[S3 Bucket]
-    F -->|Generate TTS| H[AWS Polly]
-    F -->|Update Status| E
-    F -->|Upload Result| G
-
-    I[User] -->|GET /status/jobId| B
-    B --> J[Get Status Lambda]
-    J -->|Read Status| E
-
-    F -->|Send Notification| K[Webhook Endpoint]
-
-    style F fill:#ff9999
-    style G fill:#87CEEB
-    style H fill:#98FB98
-    style E fill:#DDA0DD
-    style D fill:#F0E68C
-
-```
+![AWS Architecture Diagram](aws-diagram.png)
 
 ## 🔧 AWS Lambda Implementation
 
